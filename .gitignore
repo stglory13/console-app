@@ -1,12 +1,19 @@
 # ===== General =====
 .DS_Store
+Thumbs.db
 
 # ===== Build =====
 /build/
 /out/
 /.gradle/
 
-# Gradle wrapper (KEEP jar!)
+# ===== Java =====
+*.class
+*.jar
+*.war
+*.ear
+
+# Gradle wrapper - keep this file
 !gradle/wrapper/gradle-wrapper.jar
 
 # ===== IDE: IntelliJ =====
@@ -37,13 +44,15 @@
 # ===== Logs =====
 *.log
 
-# ===== Database (H2) =====
-.mv.db
-.trace.db
+# ===== Database - H2 =====
+*.mv.db
+*.trace.db
 
-# (optional – konkrétne názvy, ak chceš explicitne)
-coinDb.h2.
-ledgerDb.h2.
+# ===== Temp =====
+tmp/
+temp/
+*.swp
 
-# ===== OS temp =====
-Thumbs.db
+# ===== Env =====
+.env
+.env.local
