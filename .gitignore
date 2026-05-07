@@ -1,19 +1,12 @@
 # ===== General =====
 .DS_Store
-Thumbs.db
 
 # ===== Build =====
 /build/
 /out/
 /.gradle/
 
-# ===== Java =====
-*.class
-*.jar
-*.war
-*.ear
-
-# Gradle wrapper - keep this file
+# Gradle wrapper (KEEP jar!)
 !gradle/wrapper/gradle-wrapper.jar
 
 # ===== IDE: IntelliJ =====
@@ -44,15 +37,17 @@ Thumbs.db
 # ===== Logs =====
 *.log
 
-# ===== Database - H2 =====
+# ===== Database (H2) =====
 *.mv.db
 *.trace.db
 
-# ===== Temp =====
-tmp/
-temp/
-*.swp
+# ===== OS temp =====
+Thumbs.db
 
-# ===== Env =====
-.env
-.env.local
+# ===== Temporary / backup files (editors, OS) =====
+# generic temp files
+*.tmp
+# vim swap files
+*.swp
+# editor backup files
+*~
