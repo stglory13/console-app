@@ -1,4 +1,4 @@
-# Coin account app - Demo Project 
+# Coin account app - Demo Project  
 
 ## Project Overview
 
