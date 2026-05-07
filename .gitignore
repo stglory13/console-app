@@ -1,0 +1,49 @@
+# ===== General =====
+.DS_Store
+
+# ===== Build =====
+/build/
+/out/
+/.gradle/
+
+# Gradle wrapper (KEEP jar!)
+!gradle/wrapper/gradle-wrapper.jar
+
+# ===== IDE: IntelliJ =====
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ===== IDE: Eclipse / STS =====
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# ===== IDE: NetBeans =====
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ===== IDE: VS Code =====
+.vscode/
+
+# ===== Logs =====
+*.log
+
+# ===== Database (H2) =====
+.mv.db
+.trace.db
+
+# (optional – konkrétne názvy, ak chceš explicitne)
+coinDb.h2.
+ledgerDb.h2.
+
+# ===== OS temp =====
+Thumbs.db
