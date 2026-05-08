@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://db:5432/coinapp
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/coinapp
     username: coinuser
     password: coinpass
 
@@ -10,6 +10,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/coinapp}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/coinapp/protocol/openid-connect/certs}
 
 logging:
   level:

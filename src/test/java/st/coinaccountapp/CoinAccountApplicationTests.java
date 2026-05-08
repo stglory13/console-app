@@ -4,11 +4,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -22,6 +27,8 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +39,26 @@ import static org.assertj.core.api.Assertions.assertThat;
         classes = CoinAccountApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
+@Import(CoinAccountApplicationTests.TestSecurityConfig.class)
 class CoinAccountApplicationTests {
+
+    /**
+     * Stub JwtDecoder pre testy — akceptuje akykolvek string ako token
+     * a vrati Jwt s rolami ADMIN + USER. Bez tohto by sa Spring snazil
+     * fetchnut JWKS z reálneho Keycloaku.
+     */
+    @TestConfiguration
+    static class TestSecurityConfig {
+        @Bean
+        public JwtDecoder jwtDecoder() {
+            return token -> Jwt.withTokenValue(token)
+                    .header("alg", "none")
+                    .subject("test-admin")
+                    .claim("preferred_username", "test-admin")
+                    .claim("realm_access", Map.of("roles", List.of("ADMIN", "USER")))
+                    .build();
+        }
+    }
 
     @Container
     @ServiceConnection
@@ -54,6 +80,11 @@ class CoinAccountApplicationTests {
 
     @BeforeEach
     void setUp() {
+        restTemplate.getRestTemplate().getInterceptors().add((request, body, execution) -> {
+            request.getHeaders().setBearerAuth("test-token");
+            return execution.execute(request, body);
+        });
+
         String baseUrl = "http://localhost:" + randomServerPort;
         getAccountUrl = baseUrl + ApiPaths.ACCOUNT_GET.replace("{guid}", "");
         createTransactionUrl = baseUrl + ApiPaths.TRANSACTION_POST;
