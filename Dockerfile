@@ -1,21 +1,15 @@
-FROM openjdk:17-slim
+FROM eclipse-temurin:21-jre-jammy
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the JAR file from your build output to the container
-COPY build/libs/coin-account-app-0.0.1-SNAPSHOT.jar app.jar
+COPY build/libs/coinapp-0.0.1-SNAPSHOT.jar app.jar
 
-# Make port 8090 available to the world outside this container
-EXPOSE 8090
+EXPOSE 8080
 
-# Run the jar file
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:8090/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:8080/actuator/health || exit 1
 
-# Add labels for better maintainability
 LABEL maintainer="Stanislav Ivan <stanislav.ivan.1@gmail.com>"
 LABEL version="0.0.1"
 LABEL description="Coin Account Application Docker Image"

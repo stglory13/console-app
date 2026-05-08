@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/coinapp
+    username: coinuser
+    password: coinpass
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    org.springframework.boot.context.config: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always

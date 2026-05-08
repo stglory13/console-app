@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: coinapp
+
+  profiles:
+    default: dev
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

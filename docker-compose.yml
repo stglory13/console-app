@@ -1,0 +1,25 @@
+services:
+  coinapp:
+    build: .
+    container_name: coinapp
+    ports:
+      - "8090:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: coinapp-db
+    environment:
+      POSTGRES_DB: coinapp
+      POSTGRES_USER: coinuser
+      POSTGRES_PASSWORD: coinpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
