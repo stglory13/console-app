@@ -10,7 +10,8 @@
 !gradle/wrapper/gradle-wrapper.jar
 
 # ===== IDE: IntelliJ =====
-.idea/
+.idea/*
+!.idea/dataSources.xml
 *.iml
 *.iws
 *.ipr
