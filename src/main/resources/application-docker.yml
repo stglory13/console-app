@@ -1,0 +1,8 @@
+# Profil pre beh v Docker kontajneri.
+# Port aplikácie zostáva default 8080 (Spring default) — host mapping je v docker-compose.yml.
+# Spoločné parametrizované nastavenia sú v application.yml a prepisované cez env vars v compose.
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized

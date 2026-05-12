@@ -1,5 +1,9 @@
 package st.coinaccountapp.config;
 
+/**
+ * Konštanty s URL cestami REST API.
+ * Centralizuje verziu API a tvary endpointov, aby boli použité konzistentne v kontroléri aj testoch.
+ */
 public class ApiPaths {
     public static final String API_VERSION = "v1";
     public static final String ACCOUNT_GET = "/" + API_VERSION + "/account/{guid}";

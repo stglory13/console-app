@@ -1,13 +1,11 @@
 package st.coinaccountapp.exception;
 
 /**
- * Data not found exception
+ * Výnimka pre prípad, že požadovaná entita sa nenašla v DB.
+ * GlobalExceptionHandler ju mapuje na HTTP 404 Not Found.
  */
 public class NotFoundException extends RuntimeException {
 
-    /**
-     * @param identifier of required object.
-     */
     public NotFoundException(Object identifier) {
         super(String.valueOf(identifier));
     }

@@ -1,0 +1,14 @@
+# Profil pre lokálny dev beh z IntelliJ.
+# Spoločné parametrizované nastavenia (datasource, JWT issuer) sú v application.yml.
+
+server:
+  port: 8185   # ← iný port než kontajner (8080), aby sa dali spustiť paralelne
+
+logging:
+  level:
+    org.springframework.boot.context.config: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always

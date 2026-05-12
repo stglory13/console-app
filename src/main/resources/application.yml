@@ -3,10 +3,35 @@ spring:
     name: coinapp
 
   profiles:
-    default: dev
+    default: localdev
 
-server:
-  port: 8080
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/coinapp
+    username: ${DB_USER:coinuser}
+    password: ${DB_PASSWORD:coinpass}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        envers:
+          do_not_audit_optimistic_locking_field: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration,classpath:db/dev_data_migration
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/coinapp}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/coinapp/protocol/openid-connect/certs}
+
+# server.port zámerne neuvedený → Spring použije default 8080 (kontajner).
+# Lokálny dev profil (application-localdev.yml) si nastaví vlastný port.
 
 management:
   endpoints:

@@ -1,31 +1,30 @@
 package st.coinaccountapp.service;
 
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import static st.coinaccountapp.logging.LogsCategorization.BUSINESS_MARKER;
 
 import java.util.Objects;
 import java.util.UUID;
-
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import st.coinaccountapp.api.dto.AccountDetailDto;
 import st.coinaccountapp.exception.NotFoundException;
 import st.coinaccountapp.model.Account;
 import st.coinaccountapp.repos.AccountRepository;
 
-
-import static st.coinaccountapp.logging.LogsCategorization.BUSINESS_MARKER;
-
+/**
+ * Biznis logika nad účtami — načítanie podľa GUID-u, uloženie a vrátenie detailu pre REST vrstvu.
+ * Operácie bežia v transakcii, optimistic locking zabezpečuje konzistentnosť pri konkurenčných zmenách.
+ */
 @Service
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class AccountService {
 
     private final AccountRepository accountRepository;
-
-    public AccountService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
 
     public AccountDetailDto getAccountDetail(@NonNull UUID guid) {
         log.debug(BUSINESS_MARKER, "Get detail of account with id: {}", guid);
@@ -40,7 +39,12 @@ public class AccountService {
     }
 
     public void save(@NonNull Account account) {
-        log.debug(BUSINESS_MARKER, "SAVE account with id: {}, name: {}, balance: {}", account.getId(), account.getName(), account.getCurrentBalance());
+        log.debug(
+                BUSINESS_MARKER,
+                "SAVE account with id: {}, name: {}, balance: {}",
+                account.getId(),
+                account.getName(),
+                account.getCurrentBalance());
         accountRepository.saveAndFlush(account);
     }
 
@@ -51,5 +55,4 @@ public class AccountService {
                 account.getMaximalOverdraft(),
                 account.getCurrentBalance());
     }
-
 }
