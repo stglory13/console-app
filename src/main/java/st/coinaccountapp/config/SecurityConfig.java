@@ -18,7 +18,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Bezpečnostná konfigurácia aplikácie — Spring Security 6 + OAuth2 Resource Server.
+ * Security konfigurácia aplikácie — Spring Security 6 + OAuth2 Resource Server.
  * Stateless autentifikácia cez JWT (Keycloak), CSRF vypnuté, verejné endpointy pre health a OpenAPI,
  * všetko ostatné vyžaduje validný token. Role z claim-u realm_access.roles sa mapujú na ROLE_X authorities.
  */
@@ -34,7 +34,9 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                .authorizeHttpRequests(auth -> auth
+                        // verejné — health pre Docker / k8s probes, OpenAPI dokumentácia
+                        .requestMatchers(
                                 "/actuator/health",
                                 "/actuator/health/**",
                                 "/v3/api-docs",
@@ -42,6 +44,10 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**")
                         .permitAll()
+                        // ostatné actuator endpointy (env, configprops, beans, mappings, ...)
+                        // expozované iba v profile localdev — vyžadujú rolu ADMIN
+                        .requestMatchers("/actuator/**")
+                        .hasRole("ADMIN")
                         .anyRequest()
                         .authenticated())
                 .oauth2ResourceServer(

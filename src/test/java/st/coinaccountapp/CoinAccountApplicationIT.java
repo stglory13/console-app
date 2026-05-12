@@ -58,6 +58,9 @@ class CoinAccountApplicationIT {
     @LocalServerPort
     private int randomServerPort;
 
+    @org.springframework.beans.factory.annotation.Value("${server.servlet.context-path:}")
+    private String contextPath;
+
     private String getAccountUrl;
     private String createTransactionUrl;
     private UUID account1Guid;
@@ -74,7 +77,7 @@ class CoinAccountApplicationIT {
             return execution.execute(request, body);
         });
 
-        String baseUrl = "http://localhost:" + randomServerPort;
+        String baseUrl = "http://localhost:" + randomServerPort + contextPath;
         getAccountUrl = baseUrl + ApiPaths.ACCOUNT_GET.replace("{guid}", "");
         createTransactionUrl = baseUrl + ApiPaths.TRANSACTION_POST;
 

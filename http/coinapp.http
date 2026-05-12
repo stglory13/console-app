@@ -2,13 +2,14 @@
 ### Použitie v IntelliJ: spusti najprv jeden z "login" requestov (uloží token do globálnej premennej),
 ### potom môžeš spúšťať ostatné requesty.
 
-@host = http://localhost:8185
-# @host = http://localhost:8030   # docker-compose variant (host 8030 → container 8080)
+@host = http://localhost:8185/coinapp
+# @host = http://localhost:8030/coinapp   # docker-compose variant (host 8030 → container 8080)
 @keycloakHost = http://localhost:8081
+
 @realm = coinapp
 @clientId = coinapp-api
 
-# Seed účty (z V1_9_0__Seed_Dev_Data.sql)
+# Seed účty (z V99_0_0__Insert_Sample_Data.sql)
 @account1 = 8d9d35e2-15b3-4fad-b853-f5731e9e19fa
 @account2 = d1e39c65-48c9-42ef-9c50-8dd5a072e510
 @account3 = 6eb7e588-5d85-4285-8c64-3be32a70393b
@@ -145,7 +146,8 @@ Content-Type: application/json
 }
 
 
-### Nulová suma (očakávané: 400 Bad Request)
+### Nulová suma (očakávané: 400 Bad Request — Bean Validation @DecimalMin)
+### Response body: "amount: amount must be greater than 0"
 POST {{host}}/v1/account/tx
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
@@ -154,11 +156,12 @@ Authorization: Bearer {{adminToken}}
   "fromAccountGuid": "{{account3}}",
   "toAccountGuid": "{{account2}}",
   "amount": 0.0,
-  "description": "Zero amount — biznis validácia padne"
+  "description": "Zero amount"
 }
 
 
-### Záporná suma (očakávané: 400 Bad Request)
+### Záporná suma (očakávané: 400 Bad Request — Bean Validation @DecimalMin)
+### Response body: "amount: amount must be greater than 0"
 POST {{host}}/v1/account/tx
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
@@ -168,6 +171,33 @@ Authorization: Bearer {{adminToken}}
   "toAccountGuid": "{{account2}}",
   "amount": -100.0,
   "description": "Negative amount"
+}
+
+
+### Chýbajúce povinné pole `fromAccountGuid` (očakávané: 400 Bad Request — Bean Validation @NotNull)
+### Response body: "fromAccountGuid: must not be null"
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "toAccountGuid": "{{account2}}",
+  "amount": 10.0,
+  "description": "Missing fromAccountGuid"
+}
+
+
+### Príliš dlhý description (>255 znakov, očakávané: 400 Bad Request — Bean Validation @Size)
+### Response body: "description: description must be at most 255 characters"
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fromAccountGuid": "{{account3}}",
+  "toAccountGuid": "{{account2}}",
+  "amount": 10.0,
+  "description": "lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum"
 }
 
 

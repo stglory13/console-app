@@ -32,6 +32,9 @@ spring:
 
 # server.port zámerne neuvedený → Spring použije default 8080 (kontajner).
 # Lokálny dev profil (application-localdev.yml) si nastaví vlastný port.
+server:
+  servlet:
+    context-path: /coinapp
 
 management:
   endpoints:
