@@ -22,8 +22,8 @@
 
 | Prostredie | Aktívny profil | Port (vnútri aplikácie) | Mapping (host:kontajner) | Mapping debug portu (host:kontajner) | Prístup z hostiteľského OS |
 |---|---|---|---|---|---|
-| IntelliJ / `bootRun` | `localdev` (default) | **8185** | — (natívne) | — (natívne, debug-run v IntelliJ) | http://localhost:8185 |
-| `docker compose up` | `docker` | **8080** | `8030:8080` | `5005:5005` (JDWP) | http://localhost:8030 |
+| IntelliJ / `bootRun` | `localdev` (default) | **8185** | — (natívne) | — (natívne, debug-run v IntelliJ) | http://localhost:8185/coinapp |
+| `docker compose up` | `docker` | **8080** | `8030:8080` | `5005:5005` (JDWP) | http://localhost:8030/coinapp |
 | Keycloak (kontajner) | — | **8080** | `8081:8080` | — | http://localhost:8081 |
 | PostgreSQL (kontajner) | — | **5432** | `5432:5432` | — | `jdbc:postgresql://localhost:5432/coinapp` |
 
@@ -56,11 +56,13 @@ Endpointy povolené v `SecurityConfig` ako `permitAll()` — slúžia na health-
 
 | Endpoint | Účel | Lokál (8185) | Docker (8030) |
 |---|---|---|---|
-| `/actuator/health` | Spring Boot health check (status DB, disk, ...) | http://localhost:8185/actuator/health | http://localhost:8030/actuator/health |
-| `/swagger-ui.html` | Swagger UI — interaktívna dokumentácia API | http://localhost:8185/swagger-ui.html | http://localhost:8030/swagger-ui.html |
-| `/v3/api-docs` | OpenAPI 3 JSON spec | http://localhost:8185/v3/api-docs | http://localhost:8030/v3/api-docs |
+| `/coinapp/actuator/health` | Spring Boot health check (status DB, disk, ...) | http://localhost:8185/coinapp/actuator/health | http://localhost:8030/coinapp/actuator/health |
+| `/coinapp/swagger-ui.html` | Swagger UI — interaktívna dokumentácia API | http://localhost:8185/coinapp/swagger-ui.html | http://localhost:8030/coinapp/swagger-ui.html |
+| `/coinapp/v3/api-docs` | OpenAPI 3 JSON spec | http://localhost:8185/coinapp/v3/api-docs | http://localhost:8030/coinapp/v3/api-docs |
 
-> `SecurityConfig` povoľuje aj `/actuator/health/**` (liveness/readiness probes pre k8s), ale tie nie sú v `application.yml` aktivované. Zapnúť cez `management.endpoint.health.probes.enabled: true` ak ich potrebuješ.
+> Aplikácia je nasadená pod `server.servlet.context-path: /coinapp`, takže všetky URL majú prefix `/coinapp`. `SecurityConfig` povoľuje aj `/actuator/health/**` (liveness/readiness probes pre k8s), ale tie nie sú v `application.yml` aktivované — zapnúť cez `management.endpoint.health.probes.enabled: true` ak ich potrebuješ.
+
+> **Rozšírené Actuator endpointy** (`/coinapp/actuator/env`, `/configprops`, `/info`, `/beans`, `/mappings`) sú expozované **iba v `localdev` profile** a vyžadujú rolu **ADMIN** (cez `SecurityConfig`). Citlivé hodnoty (`password`, `secret`, `key`, `token`) Spring automaticky maskuje ako `******`. V `docker` profile je expozovaný len `health`.
 
 > V Swagger UI klikni **Authorize** a vlož samotný JWT access token (bez prefixu `Bearer `) — získanie tokenu cez Keycloak je popísané v sekcii [Lokálne spustenie → Príklady volaní](#LokalneSpustenie).
 
@@ -73,7 +75,7 @@ docker compose up -d db keycloak
 # počkaj ~20s na Keycloak (importuje realm)
 ./gradlew bootRun
 # konzola: "Tomcat started on port(s): 8185 (http)"
-curl http://localhost:8185/actuator/health
+curl http://localhost:8185/coinapp/actuator/health
 ```
 
 ### 2) Plne v kontajneroch
@@ -82,8 +84,24 @@ curl http://localhost:8185/actuator/health
 ./gradlew clean build -x test
 docker compose up --build
 docker ps | grep coinapp        # 0.0.0.0:8030->8080/tcp
-curl http://localhost:8030/actuator/health
+curl http://localhost:8030/coinapp/actuator/health
 ```
+
+### 3) Build + redeploy jedným príkazom
+
+Pre rýchle „prelistujem všetko a nahodím nanovo" je v repu pripravený skript [`scripts/redeploy.sh`](scripts/redeploy.sh). Defaultne **zbuilduje, prenasadí 3 kontajnery aj spustí lokálnu app na 8185** (ekvivalent IntelliJ Run cez `java -jar`):
+
+```bash
+scripts/redeploy.sh                # full: build + kontajnery + lokálna app (8185)
+scripts/redeploy.sh --skip-tests   # rýchly build bez testov
+scripts/redeploy.sh --reset-db     # plný reset DB — Flyway seed sa nahrá nanovo
+scripts/redeploy.sh --no-local     # iba kontajnery (lokálnu app nespúšťa)
+scripts/redeploy.sh --stop-local   # iba zastaví bežiacu lokálnu app a skončí
+scripts/redeploy.sh --logs         # po štarte follow-uje logy coinapp kontajnera
+scripts/redeploy.sh --help         # vypíše použitie
+```
+
+Lokálna app beží v pozadí: PID v `build/local-bootrun.pid`, stdout/stderr v `build/local-bootrun.log`. Ak má niekto port 8185 zabraný (napr. IntelliJ spustená manuálne), skript to deteguje a vyzve zastaviť — nepokúsi sa proces zabiť. Po dokončení vypíše súhrn so všetkými URL.
 
 ## <a name="BiznisATechnickyPopis" id="BiznisATechnickyPopis"></a>Biznis a technický popis  [&#8593;](#home)
 
@@ -98,12 +116,12 @@ Pri každej transakcii sa kontroluje, že suma je kladná a že zostatok zdrojov
 
 ### Členenie doménového modelu
 
-- `api/` — REST kontroléry + DTO
+- `api/` — REST kontroléry (`CoinApi`), DTO (`api/dto/`), MapStruct mappery (`api/mapper/`)
 - `service/` — biznis logika (`AccountService`, `LedgerService`)
 - `model/` — JPA entity (`Account`, `Ledger`)
-- `repos/` — Spring Data repository
+- `repos/` — Spring Data repository (`AccountRepository`, `LedgerRepository`)
 - `config/` — `ApiPaths`, `SecurityConfig`, `OpenApiConfig`
-- `exception/` — vlastné výnimky + globálny handler
+- `exception/` — vlastné výnimky + globálny handler (`GlobalExceptionHandler`)
 - `logging/` — SLF4J markery (`BUSINESS_MARKER`, `PAYLOAD_MARKER`, `TECHNICAL_MARKER`)
 
 ## <a name="KonzumovaneSluzbyAZdroje" id="KonzumovaneSluzbyAZdroje"></a>Konzumované služby a zdroje (závislosti)  [&#8593;](#home)
@@ -115,18 +133,18 @@ Pri každej transakcii sa kontroluje, že suma je kladná a že zostatok zdrojov
 
 ## <a name="PublikovaneSluzby" id="PublikovaneSluzby"></a>Publikované služby  [&#8593;](#home)
 
-Bázová cesta: `/v1/account`. Všetky `/v1/**` volania vyžadujú **Bearer JWT** v hlavičke `Authorization`.
+Bázová cesta: `/coinapp/v1/account` (`server.servlet.context-path: /coinapp` + cesty z `ApiPaths`). Všetky `/v1/**` volania vyžadujú **Bearer JWT** v hlavičke `Authorization`.
 
-| Metóda | Endpoint | Popis | Status | Rola |
+| Metóda | Endpoint (s context-path) | Popis | Status | Rola |
 |---|---|---|---|---|
-| `GET` | `/v1/account/{guid}` | Vráti detail účtu | `200 OK` | `ADMIN` alebo `USER` |
-| `POST` | `/v1/account/tx` | Vykoná transakciu medzi účtami | `201 CREATED` | `ADMIN` |
+| `GET` | `/coinapp/v1/account/{guid}` | Vráti detail účtu | `200 OK` | `ADMIN` alebo `USER` |
+| `POST` | `/coinapp/v1/account/tx` | Vykoná transakciu medzi účtami | `201 CREATED` | `ADMIN` |
 
-**Otvorené (bez auth) endpointy:**
+**Otvorené (bez auth) endpointy** (matchery v `SecurityConfig`, relatívne k context-path → reálne URL majú `/coinapp/` prefix):
 
-- `/actuator/health` — pre health-check (Docker `HEALTHCHECK`, k8s probes)
-- `/v3/api-docs`, `/v3/api-docs/**` — OpenAPI definícia
-- `/swagger-ui.html`, `/swagger-ui/**` — Swagger UI
+- `/actuator/health` (real: `/coinapp/actuator/health`) — pre health-check (Docker `HEALTHCHECK`, k8s probes)
+- `/v3/api-docs`, `/v3/api-docs/**` (real: `/coinapp/v3/api-docs/**`) — OpenAPI definícia
+- `/swagger-ui.html`, `/swagger-ui/**` (real: `/coinapp/swagger-ui/**`) — Swagger UI
 
 ### Mapovanie chýb na HTTP stavy
 
@@ -146,8 +164,8 @@ Centrálny [`GlobalExceptionHandler`](src/main/java/st/coinaccountapp/exception/
 
 Po spustení aplikácie (URL závisí od prostredia — viď [Ako spustiť](#AkoSpustit)):
 
-- Swagger UI: http://localhost:8185/swagger-ui.html (lokál) · http://localhost:8030/swagger-ui.html (docker)
-- OpenAPI JSON: http://localhost:8185/v3/api-docs (lokál) · http://localhost:8030/v3/api-docs (docker)
+- Swagger UI: http://localhost:8185/coinapp/swagger-ui.html (lokál) · http://localhost:8030/coinapp/swagger-ui.html (docker)
+- OpenAPI JSON: http://localhost:8185/coinapp/v3/api-docs (lokál) · http://localhost:8030/coinapp/v3/api-docs (docker)
 
 V Swagger UI klikni **Authorize** a vlož samotný JWT access token (bez prefixu `Bearer `).
 
@@ -166,7 +184,7 @@ V Swagger UI klikni **Authorize** a vlož samotný JWT access token (bez prefixu
 | MapStruct | 1.6.3 | mapovanie entít na DTO (`api/mapper/`) |
 | springdoc-openapi | 2.6 | Swagger UI |
 | JUnit 5 + Testcontainers | latest | integračné testy nad reálnym PostgreSQL kontajnerom |
-| Gradle | 8.10 | build |
+| Gradle | 8.10.2 | build (wrapper v `gradle/wrapper/gradle-wrapper.properties`) |
 | Spotless + Palantir Java Format | 6.25 / 2.50 | automatický code formatter (`./gradlew spotlessApply`) |
 | Docker + Docker Compose | — | lokálny dev stack (app + DB + Keycloak) |
 
@@ -177,21 +195,24 @@ Single-module Gradle projekt. Štruktúra zdrojov:
 ```
 src/main/java/st/coinaccountapp/
 ├── CoinAccountApplication.java   # Spring Boot entry point
-├── api/                          # REST kontroléry + DTO
-├── service/                      # biznis logika
-├── model/                        # JPA entity
+├── api/                          # REST kontroléry (CoinApi)
+│   ├── dto/                      # request / response DTO
+│   └── mapper/                   # MapStruct mappery (Ledger → LedgerDetailDto)
+├── service/                      # biznis logika (AccountService, LedgerService)
+├── model/                        # JPA entity (Account, Ledger)
 ├── repos/                        # Spring Data repository
 ├── config/                       # ApiPaths, SecurityConfig, OpenApiConfig
-├── exception/                    # vlastné výnimky + globálny handler
+├── exception/                    # vlastné výnimky + GlobalExceptionHandler
 └── logging/                      # SLF4J markery (LogsCategorization)
 
 src/main/resources/
-├── application.yml               # base config + default profile, žiadny server.port (Spring default 8080)
+├── application.yml               # base config, server.servlet.context-path=/coinapp,
+│                                 # default profile = localdev, žiadny server.port (Spring default 8080)
 ├── application-localdev.yml      # localdev profile — IntelliJ lokál, server.port 8185
 ├── application-docker.yml        # docker profile — kontajner, server.port ostáva 8080
 └── db/
-    ├── migration/                # Flyway DDL skripty (V1_x)
-    └── dev_data_migration/       # Flyway seed dáta (V99_x, len pre dev)
+    ├── migration/                # Flyway DDL skripty (V1_x_y__*.sql)
+    └── dev_data_migration/       # Flyway seed dáta (V99_x_y__*.sql, len pre dev)
 ```
 
 ## <a name="BuildProjektu" id="BuildProjektu"></a>Build projektu  [&#8593;](#home)
@@ -232,6 +253,7 @@ Projekt používa **Spotless + Palantir Java Format**. Pravidlá:
 | spring.security.oauth2.resourceserver.jwt.issuer-uri<br/><br/>KEYCLOAK_ISSUER | **áno** | ENV-SPECIFIC | `http://localhost:8081/realms/coinapp` | Issuer URI Keycloak realmu — Spring validuje `iss` claim JWT-ka |
 | spring.security.oauth2.resourceserver.jwt.jwk-set-uri<br/><br/>KEYCLOAK_JWK_SET_URI | **áno** | ENV-SPECIFIC | `http://localhost:8081/realms/coinapp/protocol/openid-connect/certs` | JWKS endpoint — odkiaľ Spring fetchuje verejné kľúče pre overenie podpisu JWT |
 | server.port | nie | | `8080` (docker) / `8185` (localdev) | HTTP port aplikácie — viď [Ako spustiť](#AkoSpustit) |
+| server.servlet.context-path<br/><br/>SERVER_SERVLET_CONTEXT_PATH | nie | | `/coinapp` | Prefix všetkých URL — appka vystavuje endpointy pod `/coinapp/...`, vrátane `/coinapp/actuator/health` |
 | spring.flyway.locations | nie | | `classpath:db/migration,classpath:db/dev_data_migration` | Cesty k Flyway migráciám (seed dáta sú v `dev_data_migration` — v prod profile by sa mali vylúčiť) |
 | spring.jpa.hibernate.ddl-auto | nie | | `validate` | Hibernate DDL stratégia — DDL spravuje Flyway, Hibernate len validuje |
 
@@ -265,7 +287,7 @@ docker compose up -d db keycloak
 # spusti CoinAccountApplication z IDE (default profile = localdev)
 ```
 
-App beží na http://localhost:8185 (profil `localdev`), Keycloak na http://localhost:8081.
+App beží na http://localhost:8185/coinapp (profil `localdev`), Keycloak na http://localhost:8081.
 
 ### 2) Plne v kontajneroch
 
@@ -274,7 +296,7 @@ App beží na http://localhost:8185 (profil `localdev`), Keycloak na http://loca
 docker compose up --build
 ```
 
-App beží na http://localhost:8030 (profil `docker`, mapping `8030:8080`).
+App beží na http://localhost:8030/coinapp (profil `docker`, mapping `8030:8080`).
 
 ### 3) Testy
 
@@ -301,14 +323,14 @@ Detail účtu (rola `ADMIN` alebo `USER`) — nahraď `8185` za `8030`, ak aplik
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8185/v1/account/8d9d35e2-15b3-4fad-b853-f5731e9e19fa
+  http://localhost:8185/coinapp/v1/account/8d9d35e2-15b3-4fad-b853-f5731e9e19fa
 ```
 
 Transakcia (len `ADMIN`):
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" -X POST \
-  http://localhost:8185/v1/account/tx \
+  http://localhost:8185/coinapp/v1/account/tx \
   -H "Content-Type: application/json" \
   -d '{
     "fromAccountGuid": "6eb7e588-5d85-4285-8c64-3be32a70393b",
@@ -328,6 +350,7 @@ curl -H "Authorization: Bearer $TOKEN" -X POST \
 | `docker compose up` | spusti celý stack (app + DB + Keycloak) |
 | `docker compose down` | zhasni všetko |
 | `docker compose down -v` | zhasni + vymaž data volume (reset DB) |
+| `scripts/redeploy.sh` | full rebuild — Gradle build, Docker image rebuild, recreate kontajnerov, štart lokálnej app — viď [Ako spustiť → Build + redeploy](#AkoSpustit) |
 
 ### <a name="Operativa" id="Operativa"></a>Operatíva
 
@@ -358,4 +381,4 @@ Aktuálne nastavenie má `suspend=n` — kontajner sa nezastaví na štarte. Ak 
 
 #### HealthCheck
 
-- http://localhost:8185/actuator/health (lokál) · http://localhost:8030/actuator/health (docker) — endpoint sa volá interne aj v `HEALTHCHECK` direktíve v `Dockerfile`-e (vždy proti `localhost:8080` vnútri kontajnera).
+- http://localhost:8185/coinapp/actuator/health (lokál) · http://localhost:8030/coinapp/actuator/health (docker) — endpoint sa volá interne aj v `HEALTHCHECK` direktíve v `Dockerfile`-e (vždy proti `localhost:8080/coinapp` vnútri kontajnera).

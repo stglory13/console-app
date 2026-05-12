@@ -9,6 +9,17 @@ logging:
     org.springframework.boot.context.config: DEBUG
 
 management:
+  # Rozšírené endpointy iba pre lokálny dev — produkčný profil (docker) ich nemá.
+  # Citlivé hodnoty (password/secret/key/token/credentials) Spring automaticky maskuje;
+  # /actuator/** je v SecurityConfig obmedzené na rolu ADMIN.
+  endpoints:
+    web:
+      exposure:
+        include: health, env, configprops, info, beans, mappings
   endpoint:
     health:
       show-details: always
+    env:
+      show-values: when-authorized
+    configprops:
+      show-values: when-authorized
