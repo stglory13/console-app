@@ -4,28 +4,35 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
+import org.hibernate.envers.Audited;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+/**
+ * JPA entita zaznamenávajúca jednu transakciu medzi dvomi účtami.
+ * Drží sumu, zostatok zdrojového účtu po, čas a popis. Audituje sa cez Hibernate Envers.
+ */
 @Entity(name = "ledger")
+@Audited
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Getter @Setter
+@Getter
+@Setter
 @ToString(of = {"description"})
 public class Ledger extends AbstractPersistable<Long> {
-    public Ledger(@NonNull Account fromAccount,
-                  @NonNull Account toAccount,
-                  @NonNull BigDecimal amount,
-                  @NonNull BigDecimal balanceAfter,
-                  String description) {
+    public Ledger(
+            @NonNull Account fromAccount,
+            @NonNull Account toAccount,
+            @NonNull BigDecimal amount,
+            @NonNull BigDecimal balanceAfter,
+            String description) {
         this.fromAccount = fromAccount;
         this.toAccount = toAccount;
         this.amount = amount;
@@ -59,4 +66,7 @@ public class Ledger extends AbstractPersistable<Long> {
     @Column(name = "description")
     private String description;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 }

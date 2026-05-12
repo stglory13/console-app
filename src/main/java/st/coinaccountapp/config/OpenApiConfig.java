@@ -7,6 +7,10 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Konfigurácia OpenAPI / Swagger UI.
+ * Definuje meta-info API a Bearer JWT security schému, ktorá sa použije v Swagger UI cez tlačidlo „Authorize".
+ */
 @Configuration
 public class OpenApiConfig {
 
@@ -15,7 +19,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info().title("Coinapp API").version("v1"))
                 .components(new Components()
-                        .addSecuritySchemes("bearerAuth",
+                        .addSecuritySchemes(
+                                "bearerAuth",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")

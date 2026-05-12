@@ -38,10 +38,6 @@
 # ===== Logs =====
 *.log
 
-# ===== Database (H2) =====
-*.mv.db
-*.trace.db
-
 # ===== OS temp =====
 Thumbs.db
 

@@ -1,17 +1,15 @@
 package st.coinaccountapp.api.dto;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import lombok.experimental.FieldNameConstants;
-
-
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 @Value
 @FieldNameConstants

@@ -1,16 +1,15 @@
 package st.coinaccountapp.api.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-
-
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 @Value
 @FieldNameConstants
@@ -42,5 +41,4 @@ public class AccountDetailDto {
 
     @Schema(description = "Current balance in the account")
     private BigDecimal currentBalance;
-
 }

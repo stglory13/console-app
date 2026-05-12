@@ -1,0 +1,199 @@
+### Coinapp REST API — manual test requests
+### Použitie v IntelliJ: spusti najprv jeden z "login" requestov (uloží token do globálnej premennej),
+### potom môžeš spúšťať ostatné requesty.
+
+@host = http://localhost:8185
+# @host = http://localhost:8030   # docker-compose variant (host 8030 → container 8080)
+@keycloakHost = http://localhost:8081
+@realm = coinapp
+@clientId = coinapp-api
+
+# Seed účty (z V1_9_0__Seed_Dev_Data.sql)
+@account1 = 8d9d35e2-15b3-4fad-b853-f5731e9e19fa
+@account2 = d1e39c65-48c9-42ef-9c50-8dd5a072e510
+@account3 = 6eb7e588-5d85-4285-8c64-3be32a70393b
+
+
+### --------------------------------------------------------------------
+### AUTH — získanie JWT tokenov cez Keycloak (Resource Owner Password Credentials)
+### --------------------------------------------------------------------
+
+### Login ako ADMIN (role ADMIN + USER) — uloží token do {{adminToken}}
+# @name loginAdmin
+POST {{keycloakHost}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=admin@example.com&password=admin
+
+> {%
+    client.global.set("adminToken", response.body.access_token);
+    client.log("Admin token uložený do globálnej premennej adminToken");
+%}
+
+
+### Login ako USER (iba role USER) — uloží token do {{userToken}}
+# @name loginUser
+POST {{keycloakHost}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=user@example.com&password=user
+
+> {%
+    client.global.set("userToken", response.body.access_token);
+    client.log("User token uložený do globálnej premennej userToken");
+%}
+
+
+### --------------------------------------------------------------------
+### PUBLIC endpointy (bez auth)
+### --------------------------------------------------------------------
+
+### Health check
+GET {{host}}/actuator/health
+Accept: application/json
+
+
+### OpenAPI JSON
+GET {{host}}/v3/api-docs
+Accept: application/json
+
+
+### --------------------------------------------------------------------
+### GET ACCOUNT — vyžaduje rolu ADMIN alebo USER
+### --------------------------------------------------------------------
+
+### GET account 1 — ako ADMIN (očakávané: 200 OK)
+GET {{host}}/v1/account/{{account1}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### GET account 1 — ako USER (očakávané: 200 OK)
+GET {{host}}/v1/account/{{account1}}
+Authorization: Bearer {{userToken}}
+Accept: application/json
+
+
+### GET account — bez auth (očakávané: 401 Unauthorized)
+GET {{host}}/v1/account/{{account1}}
+Accept: application/json
+
+
+### GET account 2 — ako ADMIN
+GET {{host}}/v1/account/{{account2}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### GET account 3 — ako ADMIN
+GET {{host}}/v1/account/{{account3}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### GET neexistujúci account (očakávané: 404 Not Found)
+GET {{host}}/v1/account/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### GET account — invalid UUID (očakávané: 500 Internal Server Error)
+GET {{host}}/v1/account/not-a-uuid
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### --------------------------------------------------------------------
+### CREATE TRANSACTION — vyžaduje rolu ADMIN
+### --------------------------------------------------------------------
+
+### Validná transakcia: account3 → account2, 100 (očakávané: 201 Created)
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fromAccountGuid": "{{account3}}",
+  "toAccountGuid": "{{account2}}",
+  "amount": 100.0,
+  "description": "Test transfer from HTTP template"
+}
+
+
+### Transakcia ako USER (očakávané: 403 Forbidden)
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "fromAccountGuid": "{{account3}}",
+  "toAccountGuid": "{{account2}}",
+  "amount": 50.0,
+  "description": "Should be denied — USER nemá ADMIN role"
+}
+
+
+### Transakcia bez auth (očakávané: 401 Unauthorized)
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+
+{
+  "fromAccountGuid": "{{account3}}",
+  "toAccountGuid": "{{account2}}",
+  "amount": 10.0,
+  "description": "no auth"
+}
+
+
+### Nulová suma (očakávané: 400 Bad Request)
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fromAccountGuid": "{{account3}}",
+  "toAccountGuid": "{{account2}}",
+  "amount": 0.0,
+  "description": "Zero amount — biznis validácia padne"
+}
+
+
+### Záporná suma (očakávané: 400 Bad Request)
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fromAccountGuid": "{{account3}}",
+  "toAccountGuid": "{{account2}}",
+  "amount": -100.0,
+  "description": "Negative amount"
+}
+
+
+### Suma presahujúca maximalOverdraft account1 (1000) — z account1 odoslať 99999
+### account1.currentBalance = 913.13, maximalOverdraft = 1000 → max prečerpanie do -1000
+### 913.13 - 99999 = -99085.87 << -1000  → očakávané: 400 Bad Request
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fromAccountGuid": "{{account1}}",
+  "toAccountGuid": "{{account2}}",
+  "amount": 99999.0,
+  "description": "Exceeds maximalOverdraft"
+}
+
+
+### Reverzná transakcia: account2 → account3, 50
+POST {{host}}/v1/account/tx
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fromAccountGuid": "{{account2}}",
+  "toAccountGuid": "{{account3}}",
+  "amount": 50.0,
+  "description": "Reverse transfer"
+}

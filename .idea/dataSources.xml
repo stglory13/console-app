@@ -6,7 +6,6 @@
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5432/coinapp</jdbc-url>
-      <user-name>coinuser</user-name>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

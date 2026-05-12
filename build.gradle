@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'java'
+    id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group = 'st.coinaccountapp'
@@ -26,7 +27,7 @@ repositories {
 test {
     useJUnitPlatform()
     testLogging.showStandardStreams = true
-    systemProperty 'spring.profiles.active', 'test'
+    systemProperty 'spring.profiles.active', 'localdev'
 }
 
 dependencies {
@@ -37,13 +38,20 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-web-services'
-    implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.hibernate.orm:hibernate-envers'
+
+    implementation 'org.mapstruct:mapstruct:1.6.3'
 
     runtimeOnly 'org.postgresql:postgresql'
 
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -52,3 +60,15 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
 }
+
+spotless {
+    java {
+        target 'src/**/*.java'
+        palantirJavaFormat('2.50.0')
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+tasks.named('check') { dependsOn 'spotlessCheck' }
