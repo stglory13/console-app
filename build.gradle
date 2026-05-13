@@ -72,3 +72,13 @@ spotless {
 }
 
 tasks.named('check') { dependsOn 'spotlessCheck' }
+
+tasks.named("build") {
+    doFirst {
+        if (project.hasProperty("prod")) {
+            println "🚀 Production build"
+        } else {
+            println "🧪 Dev build"
+        }
+    }
+}

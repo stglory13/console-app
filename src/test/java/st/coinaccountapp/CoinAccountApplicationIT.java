@@ -14,40 +14,20 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import st.coinaccountapp.api.dto.AccountDetailDto;
 import st.coinaccountapp.api.dto.CreateTransactionDto;
 import st.coinaccountapp.api.dto.LedgerDetailDto;
 import st.coinaccountapp.config.ApiPaths;
 import st.coinaccountapp.model.Account;
 import st.coinaccountapp.repos.AccountRepository;
-import st.coinaccountapp.testsupport.IntegrationTestSecurityConfig;
+import st.coinaccountapp.testsupport.AbstractIT;
 
-@Testcontainers
-@ActiveProfiles("localdev")
-@SpringBootTest(classes = CoinAccountApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(IntegrationTestSecurityConfig.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class CoinAccountApplicationIT {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
-
-    @Autowired
-    private TestRestTemplate restTemplate;
+class CoinAccountApplicationIT extends AbstractIT {
 
     @Autowired
     private AccountRepository accountRepository;
@@ -55,13 +35,7 @@ class CoinAccountApplicationIT {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @LocalServerPort
-    private int randomServerPort;
-
-    @org.springframework.beans.factory.annotation.Value("${server.servlet.context-path:}")
-    private String contextPath;
-
-    private String getAccountUrl;
+    private String accountUrl;
     private String createTransactionUrl;
     private UUID account1Guid;
     private UUID account2Guid;
@@ -77,8 +51,8 @@ class CoinAccountApplicationIT {
             return execution.execute(request, body);
         });
 
-        String baseUrl = "http://localhost:" + randomServerPort + contextPath;
-        getAccountUrl = baseUrl + ApiPaths.ACCOUNT_GET.replace("{guid}", "");
+        String baseUrl = "http://localhost:" + port + contextPath;
+        accountUrl = baseUrl + ApiPaths.ACCOUNT_GET.replace("{guid}", "");
         createTransactionUrl = baseUrl + ApiPaths.TRANSACTION_POST;
 
         account1Guid = UUID.fromString("8d9d35e2-15b3-4fad-b853-f5731e9e19fa");
@@ -92,7 +66,7 @@ class CoinAccountApplicationIT {
     @Order(1)
     void getAccount_returnsCorrectDetail_forSeedAccount1() throws URISyntaxException {
         ResponseEntity<AccountDetailDto> response =
-                restTemplate.getForEntity(new URI(getAccountUrl + account1Guid), AccountDetailDto.class);
+                restTemplate.getForEntity(new URI(accountUrl + account1Guid), AccountDetailDto.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody())
@@ -107,7 +81,7 @@ class CoinAccountApplicationIT {
     @Order(2)
     void getAccount_returnsCorrectDetail_forSeedAccount2() throws URISyntaxException {
         ResponseEntity<AccountDetailDto> response =
-                restTemplate.getForEntity(new URI(getAccountUrl + account2Guid), AccountDetailDto.class);
+                restTemplate.getForEntity(new URI(accountUrl + account2Guid), AccountDetailDto.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody())
@@ -122,7 +96,7 @@ class CoinAccountApplicationIT {
     @Order(3)
     void getAccount_returnsCorrectDetail_forSeedAccount3() throws URISyntaxException {
         ResponseEntity<AccountDetailDto> response =
-                restTemplate.getForEntity(new URI(getAccountUrl + account3Guid), AccountDetailDto.class);
+                restTemplate.getForEntity(new URI(accountUrl + account3Guid), AccountDetailDto.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody())
@@ -137,7 +111,7 @@ class CoinAccountApplicationIT {
     @Order(4)
     void getAccount_notFound_whenGuidDoesNotExist() throws URISyntaxException {
         ResponseEntity<String> response =
-                restTemplate.getForEntity(new URI(getAccountUrl + nonExistentAccountGuid), String.class);
+                restTemplate.getForEntity(new URI(accountUrl + nonExistentAccountGuid), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).contains("Data not found: " + nonExistentAccountGuid);
@@ -147,7 +121,7 @@ class CoinAccountApplicationIT {
     @Order(5)
     void getAccount_internalServerError_whenInvalidGuid() throws URISyntaxException {
         ResponseEntity<String> response =
-                restTemplate.getForEntity(new URI(getAccountUrl + nonValidAccountGuid), String.class);
+                restTemplate.getForEntity(new URI(accountUrl + nonValidAccountGuid), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody())
@@ -201,11 +175,11 @@ class CoinAccountApplicationIT {
     @Order(50)
     void createTransaction_success_updatesBothAccountBalances() throws URISyntaxException {
         BigDecimal fromBalanceBefore = restTemplate
-                .getForEntity(new URI(getAccountUrl + account3Guid), AccountDetailDto.class)
+                .getForEntity(new URI(accountUrl + account3Guid), AccountDetailDto.class)
                 .getBody()
                 .getCurrentBalance();
         BigDecimal toBalanceBefore = restTemplate
-                .getForEntity(new URI(getAccountUrl + account2Guid), AccountDetailDto.class)
+                .getForEntity(new URI(accountUrl + account2Guid), AccountDetailDto.class)
                 .getBody()
                 .getCurrentBalance();
 
@@ -228,11 +202,11 @@ class CoinAccountApplicationIT {
         assertThat(ledger.getLedgerId()).isNotNull();
 
         BigDecimal fromBalanceAfter = restTemplate
-                .getForEntity(new URI(getAccountUrl + account3Guid), AccountDetailDto.class)
+                .getForEntity(new URI(accountUrl + account3Guid), AccountDetailDto.class)
                 .getBody()
                 .getCurrentBalance();
         BigDecimal toBalanceAfter = restTemplate
-                .getForEntity(new URI(getAccountUrl + account2Guid), AccountDetailDto.class)
+                .getForEntity(new URI(accountUrl + account2Guid), AccountDetailDto.class)
                 .getBody()
                 .getCurrentBalance();
 
