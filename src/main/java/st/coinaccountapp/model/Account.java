@@ -25,7 +25,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
-@ToString(of = {"name"})
+@ToString(onlyExplicitlyIncluded = true)
 public class Account extends AbstractPersistable<Long> {
 
     /**
@@ -37,7 +37,13 @@ public class Account extends AbstractPersistable<Long> {
 
     @NonNull
     @Column(name = "name", nullable = false)
+    @ToString.Include
     private String name;
+
+    @ToString.Include
+    public Long getId() {
+        return super.getId();
+    }
 
     /**
      * Maximum allowed overdraft amount (if the account goes below zero, how far we can go)
