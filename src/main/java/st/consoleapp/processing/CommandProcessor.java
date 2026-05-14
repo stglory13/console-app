@@ -1,54 +1,74 @@
 package st.consoleapp.processing;
 
 import st.consoleapp.command.Command;
-import st.consoleapp.persistence.ModificationDao;
-import st.consoleapp.persistence.UserDao;
-
-import java.sql.SQLException;
-import java.util.Map;
+import st.consoleapp.output.OutputWriter;
+import st.consoleapp.persistence.ModificationRepository;
+import st.consoleapp.state.UserSessionState;
 
 public class CommandProcessor {
 
-    private final UserDao userDao;
-    private final ModificationDao modificationDao;
+    private final UserSessionState sessionState;
+    private final ModificationRepository repository;
+    private final OutputWriter output;
 
-    public CommandProcessor(UserDao userDao, ModificationDao modificationDao) {
-        this.userDao = userDao;
-        this.modificationDao = modificationDao;
+    public CommandProcessor(
+            UserSessionState sessionState,
+            ModificationRepository repository,
+            OutputWriter output
+    ) {
+        this.sessionState = sessionState;
+        this.repository = repository;
+        this.output = output;
     }
 
     public void process(Command command) {
         try {
             switch (command.type()) {
-                case LOGIN:
-                    userDao.login(command.userId());
-                    break;
-                case LOGOUT:
-                    userDao.logout(command.userId());
-                    break;
-                case DATA_MODIFY:
-                    if (userDao.isLoggedIn(command.userId())) {
-                        modificationDao.addModification(command.userId());
-                    }
-                    break;
-                case STATS:
-                    int loggedInCount = userDao.getLoggedInCount();
-                    System.out.println("Number of currently logged-in users: " + loggedInCount);
-                    Map<String, Integer> modCounts = modificationDao.getModificationCounts();
-                    System.out.println("Number of data modifications per user:");
-                    for (Map.Entry<String, Integer> entry : modCounts.entrySet()) {
-                        System.out.println(entry.getKey() + ": " + entry.getValue());
-                    }
-                    break;
-                case EXIT:
-                    // already handled
-                    break;
-                case INVALID:
-                    // ignore
-                    break;
+                case LOGIN -> processLogin(command);
+                case LOGOUT -> processLogout(command);
+                case DATA_MODIFY -> processDataModify(command);
+                case STATS -> processStats(command);
+                case EXIT -> output.write("Completed commandId=" + command.id() + " EXIT");
+                case INVALID -> output.write("Invalid command ignored: " + command.rawInput());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            output.write("Failed commandId=" + command.id() + " " + command.rawInput());
         }
+    }
+
+    private void processLogin(Command command) {
+        boolean success = sessionState.login(command.userId());
+
+        if (success) {
+            output.write("Completed commandId=" + command.id() + " LOGIN: user logged in: " + command.userId());
+        } else {
+            output.write("Completed commandId=" + command.id() + " LOGIN: user already logged in: " + command.userId());
+        }
+    }
+
+    private void processLogout(Command command) {
+        boolean success = sessionState.logout(command.userId());
+
+        if (success) {
+            output.write("Completed commandId=" + command.id() + " LOGOUT: user logged out: " + command.userId());
+        } else {
+            output.write("Completed commandId=" + command.id() + " LOGOUT: user is not logged in: " + command.userId());
+        }
+    }
+
+    private void processDataModify(Command command) {
+        if (!sessionState.isLoggedIn(command.userId())) {
+            output.write("Completed commandId=" + command.id() + " DATA_MODIFY: ignored, user not logged in: " + command.userId());
+            return;
+        }
+
+        repository.saveModification(command.userId());
+        output.write("Completed commandId=" + command.id() + " DATA_MODIFY: saved for user: " + command.userId());
+    }
+
+    private void processStats(Command command) {
+        output.write("Completed commandId=" + command.id() + " STATS");
+        output.write("Logged users: " + sessionState.loggedInCount());
+        output.write("Data modifications per user: " + repository.countModificationsPerUser());
     }
 }

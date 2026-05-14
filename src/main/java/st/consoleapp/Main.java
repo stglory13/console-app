@@ -1,54 +1,42 @@
 package st.consoleapp;
 
-import st.consoleapp.command.Command;
 import st.consoleapp.command.CommandParser;
-import st.consoleapp.command.CommandType;
-import st.consoleapp.persistence.DatabaseManager;
-import st.consoleapp.persistence.ModificationDao;
-import st.consoleapp.persistence.UserDao;
+import st.consoleapp.output.ConsoleOutputWriter;
+import st.consoleapp.output.OutputWriter;
+import st.consoleapp.persistence.InMemoryModificationRepository;
+import st.consoleapp.persistence.ModificationRepository;
 import st.consoleapp.processing.CommandProcessor;
-import java.sql.SQLException;
-import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import st.consoleapp.producer.ConsoleCommandProducer;
+import st.consoleapp.queue.CommandQueue;
+import st.consoleapp.state.UserSessionState;
+import st.consoleapp.worker.CommandWorker;
 
 public class Main {
 
-    public static void main(String[] args) {
-        try {
-            DatabaseManager dbManager = new DatabaseManager();
-            UserDao userDao = new UserDao(dbManager.getConnection());
-            ModificationDao modificationDao = new ModificationDao(dbManager.getConnection());
-            CommandProcessor processor = new CommandProcessor(userDao, modificationDao);
-            ExecutorService executor = Executors.newFixedThreadPool(4);
+    public static void main(String[] args) throws InterruptedException {
 
-            CommandParser parser = new CommandParser();
-            System.out.println("Console App started. Type EXIT() to stop.");
-            try (Scanner scanner = new Scanner(System.in)) {
-                while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    Command command = parser.parse(line);
-                    System.out.println(command);
-                    if (command.type() != CommandType.INVALID) {
-                        executor.submit(() -> processor.process(command));
-                    }
-                    if (command.type() == CommandType.EXIT) {
-                        break;
-                    }
-                }
-            }
-            executor.shutdown();
-            try {
-                if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                    executor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                executor.shutdownNow();
-            }
-            dbManager.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        CommandQueue queue = new CommandQueue();
+
+        UserSessionState sessionState = new UserSessionState();
+        ModificationRepository repository = new InMemoryModificationRepository();
+        OutputWriter output = new ConsoleOutputWriter();
+
+        CommandProcessor processor =
+                new CommandProcessor(sessionState, repository, output);
+
+        CommandWorker worker = new CommandWorker(queue, processor);
+        Thread workerThread = new Thread(worker, "command-worker");
+
+        workerThread.start();
+
+        CommandParser parser = new CommandParser();
+        ConsoleCommandProducer producer =
+                new ConsoleCommandProducer(parser, queue);
+
+        producer.start();
+
+        workerThread.join();
+
+        System.out.println("Application terminated.");
     }
 }
