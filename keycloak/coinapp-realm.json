@@ -1,7 +1,7 @@
 {
-  "realm": "coinapp",
+  "realm": "flyapp",
   "enabled": true,
-  "displayName": "Coinapp Realm",
+  "displayName": "Flyapp Realm",
   "accessTokenLifespan": 1800,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 28800,
@@ -21,8 +21,8 @@
 
   "clients": [
     {
-      "clientId": "coinapp-api",
-      "name": "Coinapp API",
+      "clientId": "flyapp-api",
+      "name": "Flyapp API",
       "enabled": true,
       "publicClient": true,
       "directAccessGrantsEnabled": true,
@@ -48,8 +48,8 @@
 
   "users": [
     {
-      "username": "admin@example.com",
-      "email": "admin@example.com",
+      "username": "admin@slavivan.omg.whynotcode.13.sk",
+      "email": "admin@slavivan.omg.whynotcode.13.sk",
       "firstName": "Admin",
       "lastName": "Example",
       "enabled": true,
@@ -64,8 +64,8 @@
       "realmRoles": ["ADMIN", "USER"]
     },
     {
-      "username": "user@example.com",
-      "email": "user@example.com",
+      "username": "user@slavivan.omg.whynotcode.13.sk",
+      "email": "user@slavivan.omg.whynotcode.13.sk",
       "firstName": "Regular",
       "lastName": "User",
       "enabled": true,

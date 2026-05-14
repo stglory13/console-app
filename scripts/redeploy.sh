@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # Full rebuild + redeploy: zbuildí Spring Boot aplikáciu cez Gradle, postaví nový Docker
-# image, recreatne kontajner coinapp (garantuje, že beží **najnovšia** verzia JAR-u),
-# a navyše spustí aj lokálnu coinapp na porte 8185 cez `java -jar` (ekvivalent IntelliJ
+# image, recreatne kontajner flyapp (garantuje, že beží **najnovšia** verzia JAR-u),
+# a navyše spustí aj lokálnu flyapp na porte 8185 cez `java -jar` (ekvivalent IntelliJ
 # Run). Skript je idempotentný — môžeš ho spúšťať opakovane.
 #
 # Sekvencia:
 #   1. zastaví predošlú lokálnu app (lock na build/libs/*.jar)
-#   2. Gradle clean build → nový build/libs/coinapp-0.0.1-SNAPSHOT.jar
+#   2. Gradle clean build → nový build/libs/flyapp-0.0.1-SNAPSHOT.jar
 #   3. docker compose down (s --reset-db aj DB volume)
-#   4. docker compose build coinapp (nový image s čerstvým JAR-om)
+#   4. docker compose build flyapp (nový image s čerstvým JAR-om)
 #   5. docker compose up -d --force-recreate (3 kontajnery, vždy nová inštancia)
-#   6. wait for container health → http://localhost:8030/coinapp/actuator/health
+#   6. wait for container health → http://localhost:8030/flyapp/actuator/health
 #   7. verify že image z kroku 4 naozaj beží (grep „Tomcat started" v logu)
-#   8. spustí lokálnu app v pozadí → http://localhost:8185/coinapp
+#   8. spustí lokálnu app v pozadí → http://localhost:8185/flyapp
 #
 # Použitie:
 #   scripts/redeploy.sh                # plný flow (default)
@@ -21,7 +21,7 @@
 #   scripts/redeploy.sh --no-cache     # docker build bez cache (čistý Dockerfile rebuild)
 #   scripts/redeploy.sh --no-local     # iba kontajnery, lokálnu app nespúšťa
 #   scripts/redeploy.sh --stop-local   # iba zastaví lokálnu app a ukončí
-#   scripts/redeploy.sh --logs         # po štarte follow-uje logy coinapp kontajnera
+#   scripts/redeploy.sh --logs         # po štarte follow-uje logy flyapp kontajnera
 #   scripts/redeploy.sh --help         # vypíše tento help
 #
 # Flagy sa dajú kombinovať, napr.:
@@ -44,7 +44,7 @@ err()   { printf "${RED}    ✗${NC} %s\n" "$*"; }
 
 # Konštanty pre lokálnu app
 LOCAL_PORT=8185
-LOCAL_HEALTH_URL="http://localhost:${LOCAL_PORT}/coinapp/actuator/health"
+LOCAL_HEALTH_URL="http://localhost:${LOCAL_PORT}/flyapp/actuator/health"
 LOCAL_PID_FILE="build/local-bootrun.pid"
 LOCAL_LOG_FILE="build/local-bootrun.log"
 
@@ -149,9 +149,9 @@ start_local_app() {
     fi
 
     local jar_file
-    jar_file=$(ls build/libs/coinapp-*.jar 2>/dev/null | grep -v -- '-plain' | head -1)
+    jar_file=$(ls build/libs/flyapp-*.jar 2>/dev/null | grep -v -- '-plain' | head -1)
     if [ -z "$jar_file" ]; then
-        err "Build artefakt build/libs/coinapp-*.jar nenájdený — spusti predtým Gradle build."
+        err "Build artefakt build/libs/flyapp-*.jar nenájdený — spusti predtým Gradle build."
         return 1
     fi
 
@@ -230,7 +230,7 @@ else
     log "Gradle build (s testami + spotlessCheck)"
     ./gradlew clean build
 fi
-ok "Build hotový — artefakt: build/libs/coinapp-0.0.1-SNAPSHOT.jar"
+ok "Build hotový — artefakt: build/libs/flyapp-0.0.1-SNAPSHOT.jar"
 
 # ----------------------------------------------------------------------------
 # 3) Stop existujúcich kontajnerov
@@ -248,11 +248,11 @@ fi
 # 4) Docker image build (explicitne, vidíš každý krok)
 # ----------------------------------------------------------------------------
 if $NO_CACHE; then
-    log "Buildujem Docker image coinapp (--no-cache, čistý rebuild)"
-    docker compose build --no-cache coinapp
+    log "Buildujem Docker image flyapp (--no-cache, čistý rebuild)"
+    docker compose build --no-cache flyapp
 else
-    log "Buildujem Docker image coinapp z čerstvého JAR-u"
-    docker compose build coinapp
+    log "Buildujem Docker image flyapp z čerstvého JAR-u"
+    docker compose build flyapp
 fi
 ok "Image hotový"
 
@@ -260,16 +260,16 @@ ok "Image hotový"
 # 5) Štart stacku s force-recreate (garantuje, že kontajner je novo vytvorený
 #    z najnovšieho image-u — nie len reštartnutý)
 # ----------------------------------------------------------------------------
-log "Štartujem stack (db + keycloak + coinapp) s --force-recreate"
+log "Štartujem stack (db + keycloak + flyapp) s --force-recreate"
 docker compose up -d --force-recreate
 
 # ----------------------------------------------------------------------------
 # 6) Wait for container app health
 # ----------------------------------------------------------------------------
-log "Čakám na kontajnerovú app health-check (http://localhost:8030/coinapp/actuator/health)..."
+log "Čakám na kontajnerovú app health-check (http://localhost:8030/flyapp/actuator/health)..."
 HEALTHY=false
 for i in $(seq 1 90); do
-    if curl -sf http://localhost:8030/coinapp/actuator/health >/dev/null 2>&1; then
+    if curl -sf http://localhost:8030/flyapp/actuator/health >/dev/null 2>&1; then
         ok "Kontajnerová app je healthy ($i s)"
         HEALTHY=true
         break
@@ -278,7 +278,7 @@ for i in $(seq 1 90); do
 done
 
 if ! $HEALTHY; then
-    err "Kontajnerová app neodpovedá po 90 s — pozri 'docker compose logs coinapp'"
+    err "Kontajnerová app neodpovedá po 90 s — pozri 'docker compose logs flyapp'"
     docker compose ps
     exit 1
 fi
@@ -288,15 +288,15 @@ fi
 #    Image ID kontajnera musí súhlasiť s aktuálnym image-om v repo
 # ----------------------------------------------------------------------------
 log "Overujem, že kontajner beží z najnovšieho image-u"
-EXPECTED_IMAGE_ID=$(docker compose images --quiet coinapp 2>/dev/null || true)
-RUNNING_IMAGE_ID=$(docker inspect --format='{{.Image}}' coinapp 2>/dev/null | sed 's|sha256:||' | cut -c1-12 || true)
+EXPECTED_IMAGE_ID=$(docker compose images --quiet flyapp 2>/dev/null || true)
+RUNNING_IMAGE_ID=$(docker inspect --format='{{.Image}}' flyapp 2>/dev/null | sed 's|sha256:||' | cut -c1-12 || true)
 EXPECTED_SHORT=$(echo "$EXPECTED_IMAGE_ID" | cut -c1-12)
 if [ -n "$EXPECTED_SHORT" ] && [ -n "$RUNNING_IMAGE_ID" ] && [ "$EXPECTED_SHORT" = "$RUNNING_IMAGE_ID" ]; then
     ok "Image ID match: $RUNNING_IMAGE_ID"
 else
     warn "Image ID check skipped/mismatch (running=$RUNNING_IMAGE_ID, expected=$EXPECTED_SHORT)"
 fi
-STARTUP_LINE=$(docker logs coinapp 2>&1 | grep -E "Tomcat started on port" | tail -1 || true)
+STARTUP_LINE=$(docker logs flyapp 2>&1 | grep -E "Tomcat started on port" | tail -1 || true)
 if [ -n "$STARTUP_LINE" ]; then
     ok "Tomcat: ${STARTUP_LINE##*--- }"
 fi
@@ -319,7 +319,7 @@ docker compose ps
 LOCAL_INFO=""
 if ! $NO_LOCAL; then
     LOCAL_INFO="
-  • coinapp (lokál)   → http://localhost:8185/coinapp  (PID $(cat "$LOCAL_PID_FILE"), log: $LOCAL_LOG_FILE)
+  • flyapp (lokál)   → http://localhost:8185/flyapp  (PID $(cat "$LOCAL_PID_FILE"), log: $LOCAL_LOG_FILE)
                         Zastav cez: scripts/redeploy.sh --stop-local"
 fi
 
@@ -327,14 +327,14 @@ cat <<EOF
 
 ${GREEN}Hotovo.${NC} Aplikácia beží:
 ${LOCAL_INFO}
-  • coinapp (docker)  → http://localhost:8030/coinapp  (health: /coinapp/actuator/health, Swagger: /coinapp/swagger-ui.html)
+  • flyapp (docker)   → http://localhost:8030/flyapp  (health: /flyapp/actuator/health, Swagger: /flyapp/swagger-ui.html)
   • keycloak          → http://localhost:8081  (admin / admin)
-  • postgres          → jdbc:postgresql://localhost:5432/coinapp  (coinuser / coinpass)
+  • postgres          → jdbc:postgresql://localhost:5432/flyapp  (flyuser / flypass)
   • JDWP debug        → localhost:5005          (IntelliJ → Remote JVM Debug)
 
 EOF
 
 if $FOLLOW_LOGS; then
-    log "Sledujem logy coinapp kontajnera (Ctrl+C ukončí)"
-    docker compose logs -f coinapp
+    log "Sledujem logy flyapp kontajnera (Ctrl+C ukončí)"
+    docker compose logs -f flyapp
 fi

@@ -1,15 +1,15 @@
 services:
-  coinapp:
+  flyapp:
     build: .
-    container_name: coinapp
+    container_name: flynapp
     ports:
       - "8030:8080"   # host:container — kontajner vnútri 8080, host 8030 (paralelne s lokálnym 8185)
       - "5005:5005"   # JDWP debug port — pripoj sa IntelliJ-om: Remote JVM Debug, localhost:5005
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - DB_HOST=db
-      - KEYCLOAK_ISSUER=http://localhost:8081/realms/coinapp
-      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/coinapp/protocol/openid-connect/certs
+      - KEYCLOAK_ISSUER=http://localhost:8081/realms/flyapp
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/flyapp/protocol/openid-connect/certs
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
       - db
@@ -17,11 +17,11 @@ services:
 
   db:
     image: postgres:16
-    container_name: coinapp-db
+    container_name: flyapp-db
     environment:
-      POSTGRES_DB: coinapp
-      POSTGRES_USER: coinuser
-      POSTGRES_PASSWORD: coinpass
+      POSTGRES_DB: flyapp
+      POSTGRES_USER: flyuser
+      POSTGRES_PASSWORD: flypass
     ports:
       - "5432:5432"
     volumes:
@@ -29,7 +29,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
-    container_name: coinapp-keycloak
+    container_name: flyapp-keycloak
     command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
@@ -40,7 +40,7 @@ services:
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_HTTP_ENABLED: true
     volumes:
-      - ./keycloak/coinapp-realm.json:/opt/keycloak/data/import/coinapp-realm.json:ro
+      - ./keycloak/flyapp-realm.json:/opt/keycloak/data/import/flyapp-realm.json:ro
     ports:
       - "8081:8080"
 

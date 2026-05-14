@@ -1,14 +1,14 @@
 spring:
   application:
-    name: coinapp
+    name: flyapp
 
   profiles:
     default: localdev
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:5432/coinapp
-    username: ${DB_USER:coinuser}
-    password: ${DB_PASSWORD:coinpass}
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/flyapp
+    username: ${DB_USER:flyuser}
+    password: ${DB_PASSWORD:flypass}
 
   jpa:
     hibernate:
@@ -27,12 +27,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/coinapp}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/coinapp/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/flyapp}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/flyapp/protocol/openid-connect/certs}
 
 server:
   servlet:
-    context-path: /coinapp
+    context-path: /flyapp
 
 management:
   endpoints:

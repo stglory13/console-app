@@ -1,4 +1,4 @@
-# <a name="home" id="home"></a>CoinApp — Coin Account Application
+# <a name="home" id="home"></a>flyapp — Fly Application
 
 - [Ako spustiť](#AkoSpustit)
 - [Biznis a technický popis](#BiznisATechnickyPopis)
@@ -22,21 +22,21 @@
 
 | Prostredie | Aktívny profil | Port (vnútri aplikácie) | Mapping (host:kontajner) | Mapping debug portu (host:kontajner) | Prístup z hostiteľského OS |
 |---|---|---|---|---|---|
-| IntelliJ / `bootRun` | `localdev` (default) | **8185** | — (natívne) | — (natívne, debug-run v IntelliJ) | http://localhost:8185/coinapp |
-| `docker compose up` | `docker` | **8080** | `8030:8080` | `5005:5005` (JDWP) | http://localhost:8030/coinapp |
+| IntelliJ / `bootRun` | `localdev` (default) | **8185** | — (natívne) | — (natívne, debug-run v IntelliJ) | http://localhost:8185/flyapp |
+| `docker compose up` | `docker` | **8080** | `8030:8080` | `5005:5005` (JDWP) | http://localhost:8030/flyapp |
 | Keycloak (kontajner) | — | **8080** | `8081:8080` | — | http://localhost:8081 |
-| PostgreSQL (kontajner) | — | **5432** | `5432:5432` | — | `jdbc:postgresql://localhost:5432/coinapp` |
+| PostgreSQL (kontajner) | — | **5432** | `5432:5432` | — | `jdbc:postgresql://localhost:5432/flyapp` |
 
 Porty sú zámerne rozdielne medzi lokálnym a kontajnerovým behom — možno spustiť obidva paralelne (dev z IntelliJ na 8185 proti "produkčnému" kontajneru na 8030). Pripojenie debuggera na kontajner: viď [Pripojenie debuggera k bežiacemu kontajneru](#Operativa).
 
-### Predkonfigurovaní Keycloak používatelia (realm `coinapp`)
+### Predkonfigurovaní Keycloak používatelia (realm `flyapp`)
 
 | Username | Heslo | Role |
 |---|---|---|
 | `admin@example.com` | `admin` | `ADMIN`, `USER` |
 | `user@example.com`  | `user`  | `USER` |
 
-Realm a používatelia sa importujú z [`keycloak/coinapp-realm.json`](keycloak/coinapp-realm.json) pri prvom štarte Keycloaku.
+Realm a používatelia sa importujú z [`keycloak/flyapp-realm.json`](keycloak/flyapp-realm.json) pri prvom štarte Keycloaku.
 
 ### Pripojenie k PostgreSQL (z hostiteľského OS)
 
@@ -44,9 +44,9 @@ Realm a používatelia sa importujú z [`keycloak/coinapp-realm.json`](keycloak/
 |---|---|
 | Host | `localhost` |
 | Port | `5432` |
-| Database | `coinapp` |
-| User | `coinuser` |
-| Password | `coinpass` |
+| Database | `flyapp` |
+| User | `flyuser` |
+| Password | `flypass` |
 
 > Heslá v `docker-compose.yml` sú len pre lokálny vývoj. V produkcii cez secrets.
 
@@ -56,13 +56,13 @@ Endpointy povolené v `SecurityConfig` ako `permitAll()` — slúžia na health-
 
 | Endpoint | Účel | Lokál (8185) | Docker (8030) |
 |---|---|---|---|
-| `/coinapp/actuator/health` | Spring Boot health check (status DB, disk, ...) | http://localhost:8185/coinapp/actuator/health | http://localhost:8030/coinapp/actuator/health |
-| `/coinapp/swagger-ui.html` | Swagger UI — interaktívna dokumentácia API | http://localhost:8185/coinapp/swagger-ui.html | http://localhost:8030/coinapp/swagger-ui.html |
-| `/coinapp/v3/api-docs` | OpenAPI 3 JSON spec | http://localhost:8185/coinapp/v3/api-docs | http://localhost:8030/coinapp/v3/api-docs |
+| `/flyapp/actuator/health` | Spring Boot health check (status DB, disk, ...) | http://localhost:8185/flyapp/actuator/health | http://localhost:8030/flyapp/actuator/health |
+| `/flyapp/swagger-ui.html` | Swagger UI — interaktívna dokumentácia API | http://localhost:8185/flyapp/swagger-ui.html | http://localhost:8030/flyapp/swagger-ui.html |
+| `/flyapp/v3/api-docs` | OpenAPI 3 JSON spec | http://localhost:8185/flyapp/v3/api-docs | http://localhost:8030/flyapp/v3/api-docs |
 
-> Aplikácia je nasadená pod `server.servlet.context-path: /coinapp`, takže všetky URL majú prefix `/coinapp`. `SecurityConfig` povoľuje aj `/actuator/health/**` (liveness/readiness probes pre k8s), ale tie nie sú v `application.yml` aktivované — zapnúť cez `management.endpoint.health.probes.enabled: true` ak ich potrebuješ.
+> Aplikácia je nasadená pod `server.servlet.context-path: /flyapp`, takže všetky URL majú prefix `/flyapp`. `SecurityConfig` povoľuje aj `/actuator/health/**` (liveness/readiness probes pre k8s), ale tie nie sú v `application.yml` aktivované — zapnúť cez `management.endpoint.health.probes.enabled: true` ak ich potrebuješ.
 
-> **Rozšírené Actuator endpointy** (`/coinapp/actuator/env`, `/configprops`, `/info`, `/beans`, `/mappings`) sú expozované **iba v `localdev` profile** a vyžadujú rolu **ADMIN** (cez `SecurityConfig`). Citlivé hodnoty (`password`, `secret`, `key`, `token`) Spring automaticky maskuje ako `******`. V `docker` profile je expozovaný len `health`.
+> **Rozšírené Actuator endpointy** (`/flyapp/actuator/env`, `/configprops`, `/info`, `/beans`, `/mappings`) sú expozované **iba v `localdev` profile** a vyžadujú rolu **ADMIN** (cez `SecurityConfig`). Citlivé hodnoty (`password`, `secret`, `key`, `token`) Spring automaticky maskuje ako `******`. V `docker` profile je expozovaný len `health`.
 
 > V Swagger UI klikni **Authorize** a vlož samotný JWT access token (bez prefixu `Bearer `) — získanie tokenu cez Keycloak je popísané v sekcii [Lokálne spustenie → Príklady volaní](#LokalneSpustenie).
 
@@ -75,7 +75,7 @@ docker compose up -d db keycloak
 # počkaj ~20s na Keycloak (importuje realm)
 ./gradlew bootRun
 # konzola: "Tomcat started on port(s): 8185 (http)"
-curl http://localhost:8185/coinapp/actuator/health
+curl http://localhost:8185/flyapp/actuator/health
 ```
 
 ### 2) Plne v kontajneroch
@@ -83,8 +83,8 @@ curl http://localhost:8185/coinapp/actuator/health
 ```bash
 ./gradlew clean build -x test
 docker compose up --build
-docker ps | grep coinapp        # 0.0.0.0:8030->8080/tcp
-curl http://localhost:8030/coinapp/actuator/health
+docker ps | grep flyapp        # 0.0.0.0:8030->8080/tcp
+curl http://localhost:8030/flyapp/actuator/health
 ```
 
 ### 3) Build + redeploy jedným príkazom
@@ -97,7 +97,7 @@ scripts/redeploy.sh --skip-tests   # rýchly build bez testov
 scripts/redeploy.sh --reset-db     # plný reset DB — Flyway seed sa nahrá nanovo
 scripts/redeploy.sh --no-local     # iba kontajnery (lokálnu app nespúšťa)
 scripts/redeploy.sh --stop-local   # iba zastaví bežiacu lokálnu app a skončí
-scripts/redeploy.sh --logs         # po štarte follow-uje logy coinapp kontajnera
+scripts/redeploy.sh --logs         # po štarte follow-uje logy flyapp kontajnera
 scripts/redeploy.sh --help         # vypíše použitie
 ```
 
@@ -116,7 +116,7 @@ Pri každej transakcii sa kontroluje, že suma je kladná a že zostatok zdrojov
 
 ### Členenie doménového modelu
 
-- `api/` — REST kontroléry (`CoinApi`), DTO (`api/dto/`), MapStruct mappery (`api/mapper/`)
+- `api/` — REST kontroléry (`flyApi`), DTO (`api/dto/`), MapStruct mappery (`api/mapper/`)
 - `service/` — biznis logika (`AccountService`, `LedgerService`)
 - `model/` — JPA entity (`Account`, `Ledger`)
 - `repos/` — Spring Data repository (`AccountRepository`, `LedgerRepository`)
@@ -129,26 +129,26 @@ Pri každej transakcii sa kontroluje, že suma je kladná a že zostatok zdrojov
 | Závislosť | Účel |
 |---|---|
 | **PostgreSQL 16** | aplikačná DB (Flyway DDL + seed data) |
-| **Keycloak 25** | Identity Provider, vystavuje JWT access tokeny pre realm `coinapp` |
+| **Keycloak 25** | Identity Provider, vystavuje JWT access tokeny pre realm `flyapp` |
 
 ## <a name="PublikovaneSluzby" id="PublikovaneSluzby"></a>Publikované služby  [&#8593;](#home)
 
-Bázová cesta: `/coinapp/v1/account` (`server.servlet.context-path: /coinapp` + cesty z `ApiPaths`). Všetky `/v1/**` volania vyžadujú **Bearer JWT** v hlavičke `Authorization`.
+Bázová cesta: `/flyapp/v1/account` (`server.servlet.context-path: /flyapp` + cesty z `ApiPaths`). Všetky `/v1/**` volania vyžadujú **Bearer JWT** v hlavičke `Authorization`.
 
 | Metóda | Endpoint (s context-path) | Popis | Status | Rola |
 |---|---|---|---|---|
-| `GET` | `/coinapp/v1/account/{guid}` | Vráti detail účtu | `200 OK` | `ADMIN` alebo `USER` |
-| `POST` | `/coinapp/v1/account/tx` | Vykoná transakciu medzi účtami | `201 CREATED` | `ADMIN` |
+| `GET` | `/flyapp/v1/account/{guid}` | Vráti detail účtu | `200 OK` | `ADMIN` alebo `USER` |
+| `POST` | `/flyapp/v1/account/tx` | Vykoná transakciu medzi účtami | `201 CREATED` | `ADMIN` |
 
-**Otvorené (bez auth) endpointy** (matchery v `SecurityConfig`, relatívne k context-path → reálne URL majú `/coinapp/` prefix):
+**Otvorené (bez auth) endpointy** (matchery v `SecurityConfig`, relatívne k context-path → reálne URL majú `/flyapp/` prefix):
 
-- `/actuator/health` (real: `/coinapp/actuator/health`) — pre health-check (Docker `HEALTHCHECK`, k8s probes)
-- `/v3/api-docs`, `/v3/api-docs/**` (real: `/coinapp/v3/api-docs/**`) — OpenAPI definícia
-- `/swagger-ui.html`, `/swagger-ui/**` (real: `/coinapp/swagger-ui/**`) — Swagger UI
+- `/actuator/health` (real: `/flyapp/actuator/health`) — pre health-check (Docker `HEALTHCHECK`, k8s probes)
+- `/v3/api-docs`, `/v3/api-docs/**` (real: `/flyapp/v3/api-docs/**`) — OpenAPI definícia
+- `/swagger-ui.html`, `/swagger-ui/**` (real: `/flyapp/swagger-ui/**`) — Swagger UI
 
 ### Mapovanie chýb na HTTP stavy
 
-Centrálny [`GlobalExceptionHandler`](src/main/java/st/coinaccountapp/exception/GlobalExceptionHandler.java) prekladá výnimky na konzistentné HTTP odpovede:
+Centrálny [`GlobalExceptionHandler`](src/main/java/st/flyapp/exception/GlobalExceptionHandler.java) prekladá výnimky na konzistentné HTTP odpovede:
 
 | HTTP status | Spúšťacia výnimka / situácia | Telo odpovede |
 |---|---|---|
@@ -164,8 +164,8 @@ Centrálny [`GlobalExceptionHandler`](src/main/java/st/coinaccountapp/exception/
 
 Po spustení aplikácie (URL závisí od prostredia — viď [Ako spustiť](#AkoSpustit)):
 
-- Swagger UI: http://localhost:8185/coinapp/swagger-ui.html (lokál) · http://localhost:8030/coinapp/swagger-ui.html (docker)
-- OpenAPI JSON: http://localhost:8185/coinapp/v3/api-docs (lokál) · http://localhost:8030/coinapp/v3/api-docs (docker)
+- Swagger UI: http://localhost:8185/flyapp/swagger-ui.html (lokál) · http://localhost:8030/flyapp/swagger-ui.html (docker)
+- OpenAPI JSON: http://localhost:8185/flyapp/v3/api-docs (lokál) · http://localhost:8030/flyapp/v3/api-docs (docker)
 
 V Swagger UI klikni **Authorize** a vlož samotný JWT access token (bez prefixu `Bearer `).
 
@@ -193,9 +193,9 @@ V Swagger UI klikni **Authorize** a vlož samotný JWT access token (bez prefixu
 Single-module Gradle projekt. Štruktúra zdrojov:
 
 ```
-src/main/java/st/coinaccountapp/
-├── CoinAccountApplication.java   # Spring Boot entry point
-├── api/                          # REST kontroléry (CoinApi)
+src/main/java/st/flyaccountapp/
+├── flyAccountApplication.java   # Spring Boot entry point
+├── api/                          # REST kontroléry (flyApi)
 │   ├── dto/                      # request / response DTO
 │   └── mapper/                   # MapStruct mappery (Ledger → LedgerDetailDto)
 ├── service/                      # biznis logika (AccountService, LedgerService)
@@ -206,7 +206,7 @@ src/main/java/st/coinaccountapp/
 └── logging/                      # SLF4J markery (LogsCategorization)
 
 src/main/resources/
-├── application.yml               # base config, server.servlet.context-path=/coinapp,
+├── application.yml               # base config, server.servlet.context-path=/flyapp,
 │                                 # default profile = localdev, žiadny server.port (Spring default 8080)
 ├── application-localdev.yml      # localdev profile — IntelliJ lokál, server.port 8185
 ├── application-docker.yml        # docker profile — kontajner, server.port ostáva 8080
@@ -223,7 +223,7 @@ src/main/resources/
 ./gradlew spotlessApply             # preformátuje všetky Java súbory podľa Palantir Java Format
 ```
 
-Build artefakt: `build/libs/coinapp-0.0.1-SNAPSHOT.jar` (použitý v `Dockerfile`).
+Build artefakt: `build/libs/flyapp-0.0.1-SNAPSHOT.jar` (použitý v `Dockerfile`).
 
 ### Code formatting
 
@@ -246,14 +246,14 @@ Projekt používa **Spotless + Palantir Java Format**. Pravidlá:
 
 | property.key<br/><br/>PROPERTY_ENV_VAR | Povinná_(*1) | Špecifická_(*2) | Default_value | Popis |
 |---|:---:|---|---|---|
-| spring.datasource.url<br/><br/>SPRING_DATASOURCE_URL | nie | ENV-SPECIFIC | `jdbc:postgresql://${DB_HOST:localhost}:5432/coinapp` | JDBC URL na PostgreSQL DB |
+| spring.datasource.url<br/><br/>SPRING_DATASOURCE_URL | nie | ENV-SPECIFIC | `jdbc:postgresql://${DB_HOST:localhost}:5432/flyapp` | JDBC URL na PostgreSQL DB |
 | --<br/><br/>DB_HOST | nie | ENV-SPECIFIC | `localhost` | Hostname DB (v Compose `db`, lokálne `localhost`) |
-| spring.datasource.username<br/><br/>SPRING_DATASOURCE_USERNAME | nie | ENV-SPECIFIC | `coinuser` | DB používateľ |
-| spring.datasource.password<br/><br/>SPRING_DATASOURCE_PASSWORD | **áno** | ENV-SPECIFIC, PASSWORD | `coinpass` (len dev) | Heslo DB používateľa |
-| spring.security.oauth2.resourceserver.jwt.issuer-uri<br/><br/>KEYCLOAK_ISSUER | **áno** | ENV-SPECIFIC | `http://localhost:8081/realms/coinapp` | Issuer URI Keycloak realmu — Spring validuje `iss` claim JWT-ka |
-| spring.security.oauth2.resourceserver.jwt.jwk-set-uri<br/><br/>KEYCLOAK_JWK_SET_URI | **áno** | ENV-SPECIFIC | `http://localhost:8081/realms/coinapp/protocol/openid-connect/certs` | JWKS endpoint — odkiaľ Spring fetchuje verejné kľúče pre overenie podpisu JWT |
+| spring.datasource.username<br/><br/>SPRING_DATASOURCE_USERNAME | nie | ENV-SPECIFIC | `flyuser` | DB používateľ |
+| spring.datasource.password<br/><br/>SPRING_DATASOURCE_PASSWORD | **áno** | ENV-SPECIFIC, PASSWORD | `flypass` (len dev) | Heslo DB používateľa |
+| spring.security.oauth2.resourceserver.jwt.issuer-uri<br/><br/>KEYCLOAK_ISSUER | **áno** | ENV-SPECIFIC | `http://localhost:8081/realms/flyapp` | Issuer URI Keycloak realmu — Spring validuje `iss` claim JWT-ka |
+| spring.security.oauth2.resourceserver.jwt.jwk-set-uri<br/><br/>KEYCLOAK_JWK_SET_URI | **áno** | ENV-SPECIFIC | `http://localhost:8081/realms/flyapp/protocol/openid-connect/certs` | JWKS endpoint — odkiaľ Spring fetchuje verejné kľúče pre overenie podpisu JWT |
 | server.port | nie | | `8080` (docker) / `8185` (localdev) | HTTP port aplikácie — viď [Ako spustiť](#AkoSpustit) |
-| server.servlet.context-path<br/><br/>SERVER_SERVLET_CONTEXT_PATH | nie | | `/coinapp` | Prefix všetkých URL — appka vystavuje endpointy pod `/coinapp/...`, vrátane `/coinapp/actuator/health` |
+| server.servlet.context-path<br/><br/>SERVER_SERVLET_CONTEXT_PATH | nie | | `/flyapp` | Prefix všetkých URL — appka vystavuje endpointy pod `/flyapp/...`, vrátane `/flyapp/actuator/health` |
 | spring.flyway.locations | nie | | `classpath:db/migration,classpath:db/dev_data_migration` | Cesty k Flyway migráciám (seed dáta sú v `dev_data_migration` — v prod profile by sa mali vylúčiť) |
 | spring.jpa.hibernate.ddl-auto | nie | | `validate` | Hibernate DDL stratégia — DDL spravuje Flyway, Hibernate len validuje |
 
@@ -284,10 +284,10 @@ Integračné testy bežia tiež s `localdev` profilom; DB endpoint si Testcontai
 ```bash
 docker compose up -d db keycloak
 # počkaj ~20s, kým Keycloak nabootuje a importuje realm
-# spusti CoinAccountApplication z IDE (default profile = localdev)
+# spusti flyAccountApplication z IDE (default profile = localdev)
 ```
 
-App beží na http://localhost:8185/coinapp (profil `localdev`), Keycloak na http://localhost:8081.
+App beží na http://localhost:8185/flyapp (profil `localdev`), Keycloak na http://localhost:8081.
 
 ### 2) Plne v kontajneroch
 
@@ -296,7 +296,7 @@ App beží na http://localhost:8185/coinapp (profil `localdev`), Keycloak na htt
 docker compose up --build
 ```
 
-App beží na http://localhost:8030/coinapp (profil `docker`, mapping `8030:8080`).
+App beží na http://localhost:8030/flyapp (profil `docker`, mapping `8030:8080`).
 
 ### 3) Testy
 
@@ -311,9 +311,9 @@ Integračné testy automaticky vytvoria dočasný PostgreSQL kontajner cez Testc
 Získanie access tokenu (Resource Owner Password Credentials grant):
 
 ```bash
-TOKEN=$(curl -s -X POST http://localhost:8081/realms/coinapp/protocol/openid-connect/token \
+TOKEN=$(curl -s -X POST http://localhost:8081/realms/flyapp/protocol/openid-connect/token \
   -d "grant_type=password" \
-  -d "client_id=coinapp-api" \
+  -d "client_id=flyapp-api" \
   -d "username=admin@example.com" \
   -d "password=admin" \
   | jq -r .access_token)
@@ -323,14 +323,14 @@ Detail účtu (rola `ADMIN` alebo `USER`) — nahraď `8185` za `8030`, ak aplik
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8185/coinapp/v1/account/8d9d35e2-15b3-4fad-b853-f5731e9e19fa
+  http://localhost:8185/flyapp/v1/account/8d9d35e2-15b3-4fad-b853-f5731e9e19fa
 ```
 
 Transakcia (len `ADMIN`):
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" -X POST \
-  http://localhost:8185/coinapp/v1/account/tx \
+  http://localhost:8185/flyapp/v1/account/tx \
   -H "Content-Type: application/json" \
   -d '{
     "fromAccountGuid": "6eb7e588-5d85-4285-8c64-3be32a70393b",
@@ -360,17 +360,17 @@ Pripájacie údaje k DB sú uvedené v sekcii [Ako spustiť → Pripojenie k Pos
 
 #### Debugging
 
-- Logy aplikácie: `docker logs coinapp -f`
-- Logy DB: `docker logs coinapp-db -f`
-- Logy Keycloaku: `docker logs coinapp-keycloak -f`
+- Logy aplikácie: `docker logs flyapp -f`
+- Logy DB: `docker logs flyapp-db -f`
+- Logy Keycloaku: `docker logs flyapp-keycloak -f`
 - SLF4J markery pre kategorizáciu (`BIZ_MARK`, `PAYL_MARK`, `TECH_MARK`) — viď `logging/LogsCategorization`.
 
 ##### Pripojenie debuggera k bežiacemu kontajneru
 
-Compose service `coinapp` má pridaný JDWP agent (`JAVA_OPTS=-agentlib:jdwp=...,address=*:5005`) a port `5005:5005` mapping. Pripojenie z IntelliJ:
+Compose service `flyapp` má pridaný JDWP agent (`JAVA_OPTS=-agentlib:jdwp=...,address=*:5005`) a port `5005:5005` mapping. Pripojenie z IntelliJ:
 
 1. **Run → Edit Configurations → + → Remote JVM Debug**
-2. Host: `localhost`, Port: `5005`, Use module classpath: `coinapp`
+2. Host: `localhost`, Port: `5005`, Use module classpath: `flyapp`
 3. Spusti `docker compose up`, počkaj na štart appky, potom **Debug** na novej konfigurácii.
 
 Aktuálne nastavenie má `suspend=n` — kontajner sa nezastaví na štarte. Ak chceš debugovať aj bootstrap (`@PostConstruct`, Spring init), zmeň v `docker-compose.yml` na `suspend=y` a aplikácia počká, kým sa pripojí debugger.
@@ -381,4 +381,4 @@ Aktuálne nastavenie má `suspend=n` — kontajner sa nezastaví na štarte. Ak 
 
 #### HealthCheck
 
-- http://localhost:8185/coinapp/actuator/health (lokál) · http://localhost:8030/coinapp/actuator/health (docker) — endpoint sa volá interne aj v `HEALTHCHECK` direktíve v `Dockerfile`-e (vždy proti `localhost:8080/coinapp` vnútri kontajnera).
+- http://localhost:8185/flyapp/actuator/health (lokál) · http://localhost:8030/flyapp/actuator/health (docker) — endpoint sa volá interne aj v `HEALTHCHECK` direktíve v `Dockerfile`-e (vždy proti `localhost:8080/flyapp` vnútri kontajnera).
