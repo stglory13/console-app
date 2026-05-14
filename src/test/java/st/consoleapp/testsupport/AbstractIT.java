@@ -1,4 +1,4 @@
-package st.flyapp.testsupport;
+package st.consoleapp.testsupport;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import st.flyapp.FlyApplication;
+import st.consoleapp.FlyApplication;
 
 @Testcontainers
 @SpringBootTest(classes = FlyApplication.class, webEnvironment = RANDOM_PORT)

@@ -1,4 +1,4 @@
-package st.flyapp;
+package st.consoleapp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,13 +18,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import st.flyapp.api.dto.AccountDetailDto;
-import st.flyapp.api.dto.CreateTransactionDto;
-import st.flyapp.api.dto.LedgerDetailDto;
-import st.flyapp.config.ApiPaths;
-import st.flyapp.model.Account;
-import st.flyapp.repos.AccountRepository;
-import st.flyapp.testsupport.AbstractIT;
+import st.consoleapp.api.dto.AccountDetailDto;
+import st.consoleapp.api.dto.CreateTransactionDto;
+import st.consoleapp.api.dto.LedgerDetailDto;
+import st.consoleapp.config.ApiPaths;
+import st.consoleapp.model.Account;
+import st.consoleapp.repos.AccountRepository;
+import st.consoleapp.testsupport.AbstractIT;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class FlyApplicationIT extends AbstractIT {

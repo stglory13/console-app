@@ -1,4 +1,4 @@
-package st.flyapp;
+package st.consoleapp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

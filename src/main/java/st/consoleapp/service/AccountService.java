@@ -1,6 +1,6 @@
-package st.flyapp.service;
+package st.consoleapp.service;
 
-import static st.flyapp.logging.LogsCategorization.BUSINESS_MARKER;
+import static st.consoleapp.logging.LogsCategorization.BUSINESS_MARKER;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -9,10 +9,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import st.flyapp.api.dto.AccountDetailDto;
-import st.flyapp.exception.NotFoundException;
-import st.flyapp.model.Account;
-import st.flyapp.repos.AccountRepository;
+import st.consoleapp.api.dto.AccountDetailDto;
+import st.consoleapp.exception.NotFoundException;
+import st.consoleapp.model.Account;
+import st.consoleapp.repos.AccountRepository;
 
 /**
  * Biznis logika nad účtami — načítanie podľa GUID-u, uloženie a vrátenie detailu pre REST vrstvu.

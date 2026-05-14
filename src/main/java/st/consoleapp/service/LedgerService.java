@@ -1,6 +1,6 @@
-package st.flyapp.service;
+package st.consoleapp.service;
 
-import static st.flyapp.logging.LogsCategorization.BUSINESS_MARKER;
+import static st.consoleapp.logging.LogsCategorization.BUSINESS_MARKER;
 
 import java.math.BigDecimal;
 import lombok.NonNull;
@@ -8,13 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import st.flyapp.api.dto.CreateTransactionDto;
-import st.flyapp.api.dto.LedgerDetailDto;
-import st.flyapp.api.mapper.LedgerMapper;
-import st.flyapp.exception.BiznisValidationFailedException;
-import st.flyapp.model.Account;
-import st.flyapp.model.Ledger;
-import st.flyapp.repos.LedgerRepository;
+import st.consoleapp.api.dto.CreateTransactionDto;
+import st.consoleapp.api.dto.LedgerDetailDto;
+import st.consoleapp.api.mapper.LedgerMapper;
+import st.consoleapp.exception.BiznisValidationFailedException;
+import st.consoleapp.model.Account;
+import st.consoleapp.model.Ledger;
+import st.consoleapp.repos.LedgerRepository;
 
 /**
  * Biznis logika nad finančnou knihou (ledger).

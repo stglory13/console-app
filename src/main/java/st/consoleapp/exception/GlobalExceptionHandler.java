@@ -1,6 +1,6 @@
-package st.flyapp.exception;
+package st.consoleapp.exception;
 
-import static st.flyapp.logging.LogsCategorization.TECHNICAL_MARKER;
+import static st.consoleapp.logging.LogsCategorization.TECHNICAL_MARKER;
 
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;

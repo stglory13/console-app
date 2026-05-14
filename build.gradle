@@ -1,11 +1,9 @@
 plugins {
-    id 'org.springframework.boot' version '3.3.4'
-    id 'io.spring.dependency-management' version '1.1.6'
     id 'java'
-    id 'com.diffplug.spotless' version '6.25.0'
+    id 'application'
 }
 
-group = 'st.flyapp'
+group = 'st.consoleapp'
 version = '0.0.1-SNAPSHOT'
 
 java {
@@ -14,71 +12,20 @@ java {
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+application {
+    mainClass = 'st.consoleapp.Main'
 }
 
 repositories {
     mavenCentral()
 }
 
+dependencies {
+    implementation 'com.h2database:h2:2.2.224'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+}
+
 test {
     useJUnitPlatform()
-    testLogging.showStandardStreams = true
-    systemProperty 'spring.profiles.active', 'localdev'
-}
-
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-web-services'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-    implementation 'org.hibernate.orm:hibernate-envers'
-
-    implementation 'org.mapstruct:mapstruct:1.6.3'
-
-    runtimeOnly 'org.postgresql:postgresql'
-
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-database-postgresql'
-
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.testcontainers:junit-jupiter'
-    testImplementation 'org.testcontainers:postgresql'
-}
-
-spotless {
-    java {
-        target 'src/**/*.java'
-        palantirJavaFormat('2.50.0')
-        removeUnusedImports()
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-}
-
-tasks.named('check') { dependsOn 'spotlessCheck' }
-
-tasks.named("build") {
-    doFirst {
-        if (project.hasProperty("prod")) {
-            println "🚀 Production build"
-        } else {
-            println "🧪 Dev build"
-        }
-    }
 }
