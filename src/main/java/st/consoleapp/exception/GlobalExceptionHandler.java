@@ -1,6 +1,6 @@
-package st.coinaccountapp.exception;
+package st.consoleapp.exception;
 
-import static st.coinaccountapp.logging.LogsCategorization.TECHNICAL_MARKER;
+import static st.consoleapp.logging.LogsCategorization.TECHNICAL_MARKER;
 
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;

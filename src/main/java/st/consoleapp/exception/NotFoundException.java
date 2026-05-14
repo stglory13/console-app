@@ -1,4 +1,4 @@
-package st.coinaccountapp.exception;
+package st.consoleapp.exception;
 
 /**
  * Výnimka pre prípad, že požadovaná entita sa nenašla v DB.

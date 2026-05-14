@@ -1,4 +1,4 @@
-package st.coinaccountapp.exception;
+package st.consoleapp.exception;
 
 /**
  * Výnimka pre porušenie biznis pravidiel — napr. nedodržanie limitu prečerpania pri transakcii.

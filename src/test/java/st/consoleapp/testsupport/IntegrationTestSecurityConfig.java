@@ -1,4 +1,4 @@
-package st.coinaccountapp.testsupport;
+package st.consoleapp.testsupport;
 
 import java.util.List;
 import java.util.Map;

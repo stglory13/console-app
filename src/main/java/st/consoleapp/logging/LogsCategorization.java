@@ -1,4 +1,4 @@
-package st.coinaccountapp.logging;
+package st.consoleapp.logging;
 
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
