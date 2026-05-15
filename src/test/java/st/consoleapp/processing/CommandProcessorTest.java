@@ -71,7 +71,7 @@ class CommandProcessorTest {
         repository.saveModification("cmd-data-modify-user1-002", "user1");
         Command command = command("cmd-stats-001", CommandType.STATS, null, "STATS()");
         processor.process(command);
-        assertTrue(output.messages.stream().anyMatch(m -> m.contains("Logged users: 2")));
+        assertTrue(output.messages.stream().anyMatch(m -> m.contains("Logged in users: 2")));
         assertTrue(output.messages.stream().anyMatch(m -> m.contains("user1=2")));
     }
 

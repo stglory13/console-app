@@ -2,7 +2,9 @@ package st.consoleapp.producer;
 
 import st.consoleapp.command.Command;
 import st.consoleapp.command.CommandParser;
+import st.consoleapp.command.CommandType;
 import st.consoleapp.command.ParsedCommand;
+import st.consoleapp.config.AppConfig;
 import st.consoleapp.output.OutputWriter;
 import st.consoleapp.queue.CommandQueue;
 
@@ -10,6 +12,10 @@ import java.time.Instant;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Reads commands from console input and produces command events.
+ * Acts as a producer in the event-driven processing pipeline.
+ */
 public class ConsoleCommandProducer {
 
     private final CommandParser parser;
@@ -17,6 +23,9 @@ public class ConsoleCommandProducer {
     private final OutputWriter output;
     private final AtomicLong sequence = new AtomicLong(1);
 
+    /**
+     * Initializes producer with parser, queue and output.
+     */
     public ConsoleCommandProducer(
             CommandParser parser,
             CommandQueue queue,
@@ -27,6 +36,9 @@ public class ConsoleCommandProducer {
         this.output = output;
     }
 
+    /**
+     * Starts reading input from STDIN and submitting commands to the queue.
+     */
     public void start() {
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
@@ -54,14 +66,31 @@ public class ConsoleCommandProducer {
         }
     }
 
+    /**
+     * Generates a unique command correlation ID.
+     */
     private String createCommandId(ParsedCommand command) {
         long number = sequence.getAndIncrement();
-        String type = command.type().name().toLowerCase().replace("_", "-");
+        String normalizedTypeForCommandId = normalizeTypeForCommandId(command.type());
 
         if (command.userId() == null) {
-            return String.format("cmd-%s-%03d", type, number);
+            return String.format(
+                    AppConfig.NO_USER_COMMAND_ID_PATTERN,
+                    normalizedTypeForCommandId,
+                    number
+            );
         }
+        return String.format(
+                AppConfig.USER_COMMAND_ID_PATTERN,
+                normalizedTypeForCommandId,
+                command.userId(),
+                number
+        );
+    }
 
-        return String.format("cmd-%s-%s-%03d", type, command.userId(), number);
+    private String normalizeTypeForCommandId(CommandType type) {
+        return type.name()
+                .toLowerCase()
+                .replace("_", "-");
     }
 }
