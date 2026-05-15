@@ -28,11 +28,11 @@ public class CommandProcessor {
                 case LOGOUT -> processLogout(command);
                 case DATA_MODIFY -> processDataModify(command);
                 case STATS -> processStats(command);
-                case EXIT -> output.write("Completed commandId=" + command.id() + " EXIT");
+                case EXIT -> output.write("Completed commandId=" + command.commandId() + " EXIT");
                 case INVALID -> output.write("Invalid command ignored: " + command.rawInput());
             }
         } catch (Exception e) {
-            output.write("Failed commandId=" + command.id() + " " + command.rawInput());
+            output.write("Failed commandId=" + command.commandId() + " " + command.rawInput());
         }
     }
 
@@ -40,9 +40,9 @@ public class CommandProcessor {
         boolean success = sessionState.login(command.userId());
 
         if (success) {
-            output.write("Completed commandId=" + command.id() + " LOGIN: user logged in: " + command.userId());
+            output.write("Completed commandId=" + command.commandId() + " LOGIN: user logged in: " + command.userId());
         } else {
-            output.write("Completed commandId=" + command.id() + " LOGIN: user already logged in: " + command.userId());
+            output.write("Completed commandId=" + command.commandId() + " LOGIN: user already logged in: " + command.userId());
         }
     }
 
@@ -50,25 +50,25 @@ public class CommandProcessor {
         boolean success = sessionState.logout(command.userId());
 
         if (success) {
-            output.write("Completed commandId=" + command.id() + " LOGOUT: user logged out: " + command.userId());
+            output.write("Completed commandId=" + command.commandId() + " LOGOUT: user logged out: " + command.userId());
         } else {
-            output.write("Completed commandId=" + command.id() + " LOGOUT: user is not logged in: " + command.userId());
+            output.write("Completed commandId=" + command.commandId() + " LOGOUT: user is not logged in: " + command.userId());
         }
     }
 
     private void processDataModify(Command command) {
         if (!sessionState.isLoggedIn(command.userId())) {
-            output.write("Completed commandId=" + command.id() + " DATA_MODIFY: ignored, user not logged in: " + command.userId());
+            output.write("Completed commandId=" + command.commandId() + " DATA_MODIFY: ignored, user not logged in: " + command.userId());
             return;
         }
 
-        repository.saveModification(command.userId());
-        output.write("Completed commandId=" + command.id() + " DATA_MODIFY: saved for user: " + command.userId());
+        repository.saveModification(command.commandId(), command.userId());
+        output.write("Completed commandId=" + command.commandId() + " DATA_MODIFY: saved for user: " + command.userId());
     }
 
     private void processStats(Command command) {
-        output.write("Completed commandId=" + command.id() + " STATS");
-        output.write("Logged users: " + sessionState.loggedInCount());
+        output.write("Completed commandId=" + command.commandId() + " STATS");
+        output.write("Logged in users: " + sessionState.getLoggedInUserCount());
         output.write("Data modifications per user: " + repository.countModificationsPerUser());
     }
 }

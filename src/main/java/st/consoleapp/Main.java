@@ -23,9 +23,7 @@ public class Main {
                      new JdbcModificationRepository("jdbc:h2:mem:consoleapp;DB_CLOSE_DELAY=-1")) {
 
             OutputWriter output = new ConsoleOutputWriter();
-
-            CommandProcessor processor =
-                    new CommandProcessor(sessionState, repository, output);
+            CommandProcessor processor = new CommandProcessor(sessionState, repository, output);
 
             CommandWorker worker = new CommandWorker(queue, processor);
             Thread workerThread = new Thread(worker, "command-worker");
@@ -33,11 +31,9 @@ public class Main {
             workerThread.start();
 
             CommandParser parser = new CommandParser();
-            ConsoleCommandProducer producer =
-                    new ConsoleCommandProducer(parser, queue);
+            ConsoleCommandProducer producer = new ConsoleCommandProducer(parser, queue, output);
 
             producer.start();
-
             workerThread.join();
         }
 

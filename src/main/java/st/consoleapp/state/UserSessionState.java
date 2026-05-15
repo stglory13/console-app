@@ -19,7 +19,7 @@ public class UserSessionState {
         return loggedUsers.contains(userId);
     }
 
-    public int getLoggedUserCount() {
+    public int getLoggedInUserCount() {
         return loggedUsers.size();
     }
 }
