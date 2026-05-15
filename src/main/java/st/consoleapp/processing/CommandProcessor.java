@@ -5,12 +5,19 @@ import st.consoleapp.output.OutputWriter;
 import st.consoleapp.persistence.ModificationRepository;
 import st.consoleapp.state.UserSessionState;
 
+/**
+ * Processes command events and executes corresponding business logic.
+ * Acts as a consumer in the producer-consumer event-driven architecture.
+ */
 public class CommandProcessor {
 
     private final UserSessionState sessionState;
     private final ModificationRepository repository;
     private final OutputWriter output;
 
+    /**
+     * Initializes processor with session state, repository and output.
+     */
     public CommandProcessor(
             UserSessionState sessionState,
             ModificationRepository repository,
@@ -21,6 +28,9 @@ public class CommandProcessor {
         this.output = output;
     }
 
+    /**
+     * Processes a single command event.
+     */
     public void process(Command command) {
         try {
             switch (command.type()) {
@@ -36,6 +46,9 @@ public class CommandProcessor {
         }
     }
 
+    /**
+     * Handles LOGIN command.
+     */
     private void processLogin(Command command) {
         boolean success = sessionState.login(command.userId());
 
@@ -46,6 +59,9 @@ public class CommandProcessor {
         }
     }
 
+    /**
+     * Handles LOGOUT command.
+     */
     private void processLogout(Command command) {
         boolean success = sessionState.logout(command.userId());
 
@@ -56,6 +72,9 @@ public class CommandProcessor {
         }
     }
 
+    /**
+     * Handles DATA_MODIFY command.
+     */
     private void processDataModify(Command command) {
         if (!sessionState.isLoggedIn(command.userId())) {
             output.write("Completed commandId=" + command.commandId() + " DATA_MODIFY: ignored, user not logged in: " + command.userId());
@@ -66,6 +85,9 @@ public class CommandProcessor {
         output.write("Completed commandId=" + command.commandId() + " DATA_MODIFY: saved for user: " + command.userId());
     }
 
+    /**
+     * Handles STATS command.
+     */
     private void processStats(Command command) {
         output.write("Completed commandId=" + command.commandId() + " STATS");
         output.write("Logged in users: " + sessionState.getLoggedInUserCount());
