@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import st.consoleapp.command.Command;
 import st.consoleapp.command.CommandType;
 import st.consoleapp.output.OutputWriter;
-import st.consoleapp.persistence.InMemoryModificationRepository;
+import st.consoleapp.persistence.JdbcModificationRepository;
 import st.consoleapp.persistence.ModificationRepository;
 import st.consoleapp.state.UserSessionState;
 
@@ -13,7 +13,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommandProcessorTest {
 
@@ -23,51 +25,41 @@ class CommandProcessorTest {
     private CommandProcessor processor;
 
     @BeforeEach
+
     void setUp() {
         sessionState = new UserSessionState();
-        repository = new InMemoryModificationRepository();
+        repository = new JdbcModificationRepository("jdbc:h2:mem:test-" + System.nanoTime());
         output = new TestOutputWriter();
-
         processor = new CommandProcessor(sessionState, repository, output);
     }
 
     @Test
     void shouldProcessLoginCommand() {
         Command command = command("cmd-login-user1-001", CommandType.LOGIN, "user1", "LOGIN(user1)");
-
         processor.process(command);
-
         assertTrue(sessionState.isLoggedIn("user1"));
     }
 
     @Test
     void shouldProcessLogoutCommand() {
         sessionState.login("user1");
-
         Command command = command("cmd-logout-user1-001", CommandType.LOGOUT, "user1", "LOGOUT(user1)");
-
         processor.process(command);
-
         assertFalse(sessionState.isLoggedIn("user1"));
     }
 
     @Test
     void shouldProcessDataModifyCommandForLoggedInUser() {
         sessionState.login("user1");
-
         Command command = command("cmd-data-modify-user1-001", CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
-
         processor.process(command);
-
         assertEquals(1, repository.countModificationsPerUser().get("user1"));
     }
 
     @Test
     void shouldIgnoreDataModifyCommandForNotLoggedInUser() {
         Command command = command("cmd-data-modify-user1-001", CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
-
         processor.process(command);
-
         assertTrue(repository.countModificationsPerUser().isEmpty());
     }
 
@@ -75,14 +67,10 @@ class CommandProcessorTest {
     void shouldProcessStatsCommand() {
         sessionState.login("user1");
         sessionState.login("user2");
-
-        repository.saveModification("user1");
-        repository.saveModification("user1");
-
+        repository.saveModification("cmd-data-modify-user1-001", "user1");
+        repository.saveModification("cmd-data-modify-user1-002", "user1");
         Command command = command("cmd-stats-001", CommandType.STATS, null, "STATS()");
-
         processor.process(command);
-
         assertTrue(output.messages.stream().anyMatch(m -> m.contains("Logged users: 2")));
         assertTrue(output.messages.stream().anyMatch(m -> m.contains("user1=2")));
     }

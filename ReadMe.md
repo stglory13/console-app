@@ -16,18 +16,18 @@ Supported Commands
 * Multiple commands with the same user_id must result to multiple modification entries
 
 4. STATS()
-   Prints application statistics:
+*  Prints application statistics:
 * Number of currently logged-in users
 * Number of data modifications per user
 
 5. EXIT()
 * Gracefully terminates the application.
 
-Commands must be processed asynchronously and the application must be thread-safe. 
-Invalid commands must not stop or block the application You can choose any persistence solution. 
-Application functionality has to be supported by at leat one unit test. 
+Commands must be processed asynchronously and the application must be thread-safe.
+Invalid commands must not stop or block the application You can choose any persistence solution.
+Application functionality has to be supported by at leat one unit test.
 Optionally simulate concurrent user work with another test.
-Goal of this exercise is to show Java language and JDK know-how, OOP principles, clean code understanding, 
+Goal of this exercise is to show Java language and JDK know-how, OOP principles, clean code understanding,
 concurrent programming knowledge, unit testing experience.
 
 Solution  „event-driven console system“
