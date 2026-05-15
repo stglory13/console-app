@@ -3,7 +3,7 @@ package st.consoleapp;
 import st.consoleapp.command.CommandParser;
 import st.consoleapp.output.ConsoleOutputWriter;
 import st.consoleapp.output.OutputWriter;
-import st.consoleapp.persistence.InMemoryModificationRepository;
+import st.consoleapp.persistence.JdbcModificationRepository;
 import st.consoleapp.persistence.ModificationRepository;
 import st.consoleapp.processing.CommandProcessor;
 import st.consoleapp.producer.ConsoleCommandProducer;
@@ -18,25 +18,30 @@ public class Main {
         CommandQueue queue = new CommandQueue();
 
         UserSessionState sessionState = new UserSessionState();
-        ModificationRepository repository = new InMemoryModificationRepository();
-        OutputWriter output = new ConsoleOutputWriter();
 
-        CommandProcessor processor =
-                new CommandProcessor(sessionState, repository, output);
+        try (ModificationRepository repository =
+                     new JdbcModificationRepository("jdbc:h2:mem:consoleapp;DB_CLOSE_DELAY=-1")) {
 
-        CommandWorker worker = new CommandWorker(queue, processor);
-        Thread workerThread = new Thread(worker, "command-worker");
+            OutputWriter output = new ConsoleOutputWriter();
 
-        workerThread.start();
+            CommandProcessor processor =
+                    new CommandProcessor(sessionState, repository, output);
 
-        CommandParser parser = new CommandParser();
-        ConsoleCommandProducer producer =
-                new ConsoleCommandProducer(parser, queue);
+            CommandWorker worker = new CommandWorker(queue, processor);
+            Thread workerThread = new Thread(worker, "command-worker");
 
-        producer.start();
+            workerThread.start();
 
-        workerThread.join();
+            CommandParser parser = new CommandParser();
+            ConsoleCommandProducer producer =
+                    new ConsoleCommandProducer(parser, queue);
+
+            producer.start();
+
+            workerThread.join();
+        }
 
         System.out.println("Application terminated.");
     }
+
 }
