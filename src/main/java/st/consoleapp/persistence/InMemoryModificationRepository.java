@@ -24,16 +24,13 @@ public class InMemoryModificationRepository implements ModificationRepository {
                 .stream()
                 .collect(java.util.stream.Collectors.toMap(
                         Map.Entry::getKey,
-                        e -> e.getValue().get()
+                        entry -> entry.getValue().get()
                 ));
     }
 
-    public Map<String, Integer> getStats() {
-        return modifications.entrySet()
-                .stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        Map.Entry::getKey,
-                        e -> e.getValue().get()
-                ));
+    @Override
+    public void close() {
+        // No resources to close in this in-memory implementation
     }
+
 }
