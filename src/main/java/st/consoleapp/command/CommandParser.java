@@ -13,7 +13,7 @@ public class CommandParser {
 
     public Command parse(String input) {
         if (input == null || input.isBlank()) {
-            return new Command(CommandType.INVALID, null, input);
+            return new Command(sequence.getAndIncrement(), CommandType.INVALID, null, input);
         }
 
         String trimmed = input.trim();
