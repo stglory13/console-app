@@ -1,6 +1,7 @@
 package st.consoleapp;
 
 import st.consoleapp.command.CommandParser;
+import st.consoleapp.config.AppConfig;
 import st.consoleapp.output.ConsoleOutputWriter;
 import st.consoleapp.output.OutputWriter;
 import st.consoleapp.persistence.JdbcModificationRepository;
@@ -15,18 +16,17 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
 
+        OutputWriter output = new ConsoleOutputWriter();
         CommandQueue queue = new CommandQueue();
 
         UserSessionState sessionState = new UserSessionState();
 
-        try (ModificationRepository repository =
-                     new JdbcModificationRepository("jdbc:h2:mem:consoleapp;DB_CLOSE_DELAY=-1")) {
+        try (ModificationRepository repository = new JdbcModificationRepository(AppConfig.JDBC_URL)) {
 
-            OutputWriter output = new ConsoleOutputWriter();
             CommandProcessor processor = new CommandProcessor(sessionState, repository, output);
 
             CommandWorker worker = new CommandWorker(queue, processor);
-            Thread workerThread = new Thread(worker, "command-worker");
+            Thread workerThread = new Thread(worker, AppConfig.COMMAND_WORKER_THREAD_NAME);
 
             workerThread.start();
 
@@ -37,7 +37,7 @@ public class Main {
             workerThread.join();
         }
 
-        System.out.println("Application terminated.");
+        output.write("Application terminated.");
     }
 
 }
