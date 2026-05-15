@@ -11,9 +11,9 @@ public class CommandParser {
     private static final Pattern NO_ARG_COMMAND =
             Pattern.compile("^(STATS|EXIT)\\(\\)$");
 
-    public Command parse(String input) {
+    public ParsedCommand parse(String input) {
         if (input == null || input.isBlank()) {
-            return new Command(sequence.getAndIncrement(), CommandType.INVALID, null, input);
+            return new ParsedCommand(CommandType.INVALID, null, String.valueOf(input));
         }
 
         String trimmed = input.trim();
@@ -24,18 +24,18 @@ public class CommandParser {
             String userId = userMatcher.group(2).trim();
 
             if (userId.isEmpty()) {
-                return new Command(CommandType.INVALID, null, trimmed);
+                return new ParsedCommand(CommandType.INVALID, null, trimmed);
             }
 
-            return new Command(type, userId, trimmed);
+            return new ParsedCommand(type, userId, trimmed);
         }
 
         Matcher noArgMatcher = NO_ARG_COMMAND.matcher(trimmed);
         if (noArgMatcher.matches()) {
             CommandType type = CommandType.valueOf(noArgMatcher.group(1));
-            return new Command(type, null, trimmed);
+            return new ParsedCommand(type, null, trimmed);
         }
 
-        return new Command(CommandType.INVALID, null, trimmed);
+        return new ParsedCommand(CommandType.INVALID, null, trimmed);
     }
 }

@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface ModificationRepository extends AutoCloseable {
 
-    void saveModification(String userId);
+    void saveModification(String commandId, String userId);
 
     Map<String, Integer> countModificationsPerUser();
 

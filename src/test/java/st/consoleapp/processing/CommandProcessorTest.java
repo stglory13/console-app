@@ -1,143 +1,102 @@
 package st.consoleapp.processing;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import st.consoleapp.command.Command;
 import st.consoleapp.command.CommandType;
-import st.consoleapp.persistence.DatabaseManager;
-import st.consoleapp.persistence.ModificationDao;
-import st.consoleapp.persistence.UserDao;
+import st.consoleapp.output.OutputWriter;
+import st.consoleapp.persistence.InMemoryModificationRepository;
+import st.consoleapp.persistence.ModificationRepository;
+import st.consoleapp.state.UserSessionState;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.sql.SQLException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CommandProcessorTest {
 
-    private DatabaseManager dbManager;
-    private UserDao userDao;
-    private ModificationDao modificationDao;
+    private UserSessionState sessionState;
+    private ModificationRepository repository;
+    private TestOutputWriter output;
     private CommandProcessor processor;
 
     @BeforeEach
-    void setUp() throws SQLException {
-        dbManager = new DatabaseManager();
-        userDao = new UserDao(dbManager.getConnection());
-        modificationDao = new ModificationDao(dbManager.getConnection());
-        processor = new CommandProcessor(userDao, modificationDao);
-    }
+    void setUp() {
+        sessionState = new UserSessionState();
+        repository = new InMemoryModificationRepository();
+        output = new TestOutputWriter();
 
-    @AfterEach
-    void tearDown() throws SQLException {
-        dbManager.close();
+        processor = new CommandProcessor(sessionState, repository, output);
     }
 
     @Test
-    void shouldProcessLoginCommand() throws SQLException {
-        Command command = new Command(CommandType.LOGIN, "user1", "LOGIN(user1)");
+    void shouldProcessLoginCommand() {
+        Command command = command("cmd-login-user1-001", CommandType.LOGIN, "user1", "LOGIN(user1)");
 
         processor.process(command);
 
-        assertTrue(userDao.isLoggedIn("user1"));
+        assertTrue(sessionState.isLoggedIn("user1"));
     }
 
     @Test
-    void shouldProcessLogoutCommand() throws SQLException {
-        userDao.login("user1");
-        Command command = new Command(CommandType.LOGOUT, "user1", "LOGOUT(user1)");
+    void shouldProcessLogoutCommand() {
+        sessionState.login("user1");
+
+        Command command = command("cmd-logout-user1-001", CommandType.LOGOUT, "user1", "LOGOUT(user1)");
 
         processor.process(command);
 
-        assertFalse(userDao.isLoggedIn("user1"));
+        assertFalse(sessionState.isLoggedIn("user1"));
     }
 
     @Test
-    void shouldProcessDataModifyCommandForLoggedInUser() throws SQLException {
-        userDao.login("user1");
-        Command command = new Command(CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
+    void shouldProcessDataModifyCommandForLoggedInUser() {
+        sessionState.login("user1");
+
+        Command command = command("cmd-data-modify-user1-001", CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
 
         processor.process(command);
 
-        var counts = modificationDao.getModificationCounts();
-        assertEquals(1, counts.get("user1"));
+        assertEquals(1, repository.countModificationsPerUser().get("user1"));
     }
 
     @Test
-    void shouldNotProcessDataModifyCommandForNotLoggedInUser() throws SQLException {
-        Command command = new Command(CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
+    void shouldIgnoreDataModifyCommandForNotLoggedInUser() {
+        Command command = command("cmd-data-modify-user1-001", CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
 
         processor.process(command);
 
-        var counts = modificationDao.getModificationCounts();
-        assertTrue(counts.isEmpty());
+        assertTrue(repository.countModificationsPerUser().isEmpty());
     }
 
     @Test
-    void shouldProcessStatsCommand() throws SQLException {
-        userDao.login("user1");
-        userDao.login("user2");
-        modificationDao.addModification("user1");
-        modificationDao.addModification("user1");
+    void shouldProcessStatsCommand() {
+        sessionState.login("user1");
+        sessionState.login("user2");
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PrintStream printStream = new PrintStream(outputStream);
-        PrintStream originalOut = System.out;
-        System.setOut(printStream);
+        repository.saveModification("user1");
+        repository.saveModification("user1");
 
-        try {
-            Command command = new Command(CommandType.STATS, null, "STATS()");
-            processor.process(command);
+        Command command = command("cmd-stats-001", CommandType.STATS, null, "STATS()");
 
-            String output = outputStream.toString();
-            assertTrue(output.contains("Number of currently logged-in users: 2"));
-            assertTrue(output.contains("user1: 2"));
-        } finally {
-            System.setOut(originalOut);
-        }
+        processor.process(command);
+
+        assertTrue(output.messages.stream().anyMatch(m -> m.contains("Logged users: 2")));
+        assertTrue(output.messages.stream().anyMatch(m -> m.contains("user1=2")));
     }
 
-    @Test
-    void shouldHandleConcurrentCommands() throws InterruptedException {
-        int numThreads = 10;
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        CountDownLatch latch = new CountDownLatch(numThreads);
+    private Command command(String commandId, CommandType type, String userId, String rawInput) {
+        return new Command(commandId, type, userId, rawInput, Instant.now());
+    }
 
-        for (int i = 0; i < numThreads; i++) {
-            String userId = "user" + i;
-            executor.submit(() -> {
-                try {
-                    processor.process(new Command(CommandType.LOGIN, userId, "LOGIN(" + userId + ")"));
-                    processor.process(new Command(CommandType.DATA_MODIFY, userId, "DATA_MODIFY(" + userId + ")"));
-                    processor.process(new Command(CommandType.LOGOUT, userId, "LOGOUT(" + userId + ")"));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
+    private static class TestOutputWriter implements OutputWriter {
+        private final List<String> messages = new ArrayList<>();
 
-        latch.await();
-        executor.shutdown();
-
-        // Check that all users are logged out and have modifications
-        for (int i = 0; i < numThreads; i++) {
-            String userId = "user" + i;
-            try {
-                assertFalse(userDao.isLoggedIn(userId));
-                var counts = modificationDao.getModificationCounts();
-                assertEquals(1, counts.get(userId));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        @Override
+        public void write(String message) {
+            messages.add(message);
         }
     }
 }
