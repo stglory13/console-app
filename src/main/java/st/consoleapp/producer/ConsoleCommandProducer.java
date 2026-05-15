@@ -23,9 +23,6 @@ public class ConsoleCommandProducer {
     private final OutputWriter output;
     private final AtomicLong sequence = new AtomicLong(1);
 
-    /**
-     * Initializes producer with parser, queue and output.
-     */
     public ConsoleCommandProducer(
             CommandParser parser,
             CommandQueue queue,
