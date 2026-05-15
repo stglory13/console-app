@@ -50,28 +50,35 @@ public class JdbcModificationRepository implements ModificationRepository {
             ps.setTimestamp(3, Timestamp.from(Instant.now()));
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new IllegalStateException(
-                    "Cannot save modification for commandId=" + commandId + ", user=" + userId,
-                    e
-            );
+            throw new IllegalStateException("Cannot save modification for commandId=" + commandId + ", user=" + userId, e);
         }
     }
 
     @Override
-
-    public Map<String, Integer> countModificationsPerUser() {
+    public synchronized Map<String, Integer> countModificationsPerUser() {
         Map<String, Integer> result = new HashMap<>();
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT user_id, COUNT(*) FROM modifications GROUP BY user_id"
-        )) {
-            ResultSet rs = ps.executeQuery();
+
+        String sql = """
+            SELECT user_id, COUNT(*) AS modification_count
+            FROM data_modification
+            GROUP BY user_id
+            ORDER BY user_id
+            """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
-                result.put(rs.getString(1), rs.getInt(2));
+                result.put(
+                        rs.getString("user_id"),
+                        rs.getInt("modification_count")
+                );
             }
+
+            return result;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Cannot count modifications per user", e);
         }
-        return result;
     }
 
     @Override

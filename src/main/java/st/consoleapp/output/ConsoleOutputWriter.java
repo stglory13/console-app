@@ -4,6 +4,10 @@ public class ConsoleOutputWriter implements OutputWriter {
 
     @Override
     public synchronized void write(String message) {
-        System.out.println(message);
+        System.out.println("[%s] %s".formatted(
+                java.time.Instant.now(),
+                message
+        ));
+
     }
 }
