@@ -54,6 +54,30 @@ This solution is implemented as an event-driven console application using pure J
 
 The application processes user commands asynchronously using a producer-consumer architecture and persists data into an H2 database.
 
+## Application Structure
+
+The application follows a clean separation of responsibilities across core components:
+
+### Description
+
+- **Main**
+
+  Acts as the composition root. It wires all components together and starts the application.
+
+- **UserSessionState**
+
+  Holds runtime state in memory. Tracks currently logged-in users in a thread-safe way.
+
+- **Repository**
+
+  Responsible for persistence. Stores modification events into the database (H2 via JDBC).
+
+- **CommandProcessor**
+
+  Contains business logic. Interprets commands and applies rules (login, logout, stats, etc.).
+
+---
+
 Key characteristics:
 - Immutable command events
 - Asynchronous processing via queue and worker thread
