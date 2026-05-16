@@ -164,16 +164,120 @@ This ensures graceful termination of the application.
 ## Example output
 
 ```
-Accepted commandId=cmd-login-user1-001
-Completed commandId=cmd-login-user1-001 LOGIN: user logged in: user1
+/Library/Java/JavaVirtualMachines/openlogic-openjdk-21.jdk/Contents/Home/bin/java -javaagent:/Users/standoivan/Library/Caches/JetBrains/IntelliJIdea2026.1/captureAgent/debugger-agent.jar=file:///var/folders/kp/1jwp579x28d_h1h2mmftm0yr0000gn/T/capture7533844682559322563.props -ea -Didea.test.cyclic.buffer.size=1048576 -javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=56624 -Dkotlinx.coroutines.debug.enable.creation.stack.trace=false -Ddebugger.agent.enable.coroutines=true -Dkotlinx.coroutines.debug.enable.flows.stack.trace=true -Dkotlinx.coroutines.debug.enable.mutable.state.flows.stack.trace=true -Ddebugger.async.stack.trace.for.all.threads=true -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath /Users/standoivan/.m2/repository/org/junit/platform/junit-platform-launcher/1.10.2/junit-platform-launcher-1.10.2.jar:/Users/standoivan/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/standoivan/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/standoivan/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/standoivan/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/standoivan/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/standoivan/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar:/Applications/IntelliJ IDEA.app/Contents/plugins/junit/lib/junit5-rt.jar:/Applications/IntelliJ IDEA.app/Contents/plugins/junit/lib/junit-rt.jar:/Users/standoivan/Development/GitHub/console-app/build/classes/java/test:/Users/standoivan/Development/GitHub/console-app/build/classes/java/main:/Users/standoivan/.gradle/caches/modules-2/files-2.1/com.h2database/h2/2.2.224/7bdade27d8cd197d9b5ce9dc251f41d2edc5f7ad/h2-2.2.224.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter/5.10.2/831c0b86ddc2ce38391c5b81ea662b0cfdc02cce/junit-jupiter-5.10.2.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-params/5.10.2/359132c82a9d3fa87a325db6edd33b5fdc67a3d8/junit-jupiter-params-5.10.2.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.2/fb55d6e2bce173f35fd28422e7975539621055ef/junit-jupiter-api-5.10.2.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/a231e0d844d2721b0fa1b238006d15c6ded6842a/apiguardian-api-1.1.2.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.2/3197154a1f0c88da46c47a9ca27611ac7ec5d797/junit-platform-commons-1.10.2.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/152ea56b3a72f655d4fd677fc0ef2596c3dd5e6e/opentest4j-1.3.0.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.2/f1f8fe97bd58e85569205f071274d459c2c4f8cd/junit-jupiter-engine-5.10.2.jar:/Users/standoivan/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.2/d53bb4e0ce7f211a498705783440614bfaf0df2e/junit-platform-engine-1.10.2.jar com.intellij.rt.junit.JUnitStarter -ideVersion5 -junit5 st.consoleapp.ConsoleAppIT
+[INPUT] LOGOUT(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user1-001 | cmd=LOGOUT
+[INPUT] LOGIN(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user1-002 | cmd=LOGIN
+[INPUT] LOGIN(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user2-003 | cmd=LOGIN
+[INPUT] LOGIN(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user1-004 | cmd=LOGIN
+[INPUT] LOGIN()
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-005 | cmd=INVALID
+[INPUT] LOGIN
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-006 | cmd=INVALID
+[INPUT] DATA_MODIFY()
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-007 | cmd=INVALID
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user1-001 | cmd=LOGOUT | user not logged in: user1
+[INPUT] HELLO(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-008 | cmd=INVALID
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user1-002 | cmd=LOGIN | user logged in: user1
+[INPUT] INVALID_COMMAND()
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user2-003 | cmd=LOGIN | user logged in: user2
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-009 | cmd=INVALID
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user1-004 | cmd=LOGIN | user already logged in: user1
+[INPUT] DATA_MODIFY(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user1-010 | cmd=DATA_MODIFY
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-005 | cmd=INVALID | command ignored: LOGIN()
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-006 | cmd=INVALID | command ignored: LOGIN
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-007 | cmd=INVALID | command ignored: DATA_MODIFY()
+[INPUT] DATA_MODIFY(user1)
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-008 | cmd=INVALID | command ignored: HELLO(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user1-011 | cmd=DATA_MODIFY
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-009 | cmd=INVALID | command ignored: INVALID_COMMAND()
+[INPUT] DATA_MODIFY(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user2-012 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user3)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user3-013 | cmd=DATA_MODIFY
+[INPUT] LOGOUT(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user2-014 | cmd=LOGOUT
+[INPUT] LOGOUT(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user2-015 | cmd=LOGOUT
+[INPUT] DATA_MODIFY(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user2-016 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user3)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user3-017 | cmd=LOGIN
+[INPUT] DATA_MODIFY(user3)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user3-018 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user4-019 | cmd=LOGIN
+[INPUT] DATA_MODIFY(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user4-020 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user4-021 | cmd=DATA_MODIFY
+[INPUT] LOGOUT(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user4-022 | cmd=LOGOUT
+[INPUT] DATA_MODIFY(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user4-023 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user5)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user5-024 | cmd=LOGIN
+[INPUT] LOGOUT(user5)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user5-025 | cmd=LOGOUT
+[INPUT] DATA_MODIFY(user5)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user5-026 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user99-027 | cmd=LOGIN
+[INPUT] DATA_MODIFY(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user99-028 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user99-029 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user99-030 | cmd=DATA_MODIFY
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user1-010 | cmd=DATA_MODIFY | saved for user: user1
+[INPUT] STATS()
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user1-011 | cmd=DATA_MODIFY | saved for user: user1
+[console-app][21:24:20] > ACCEPTED  | id=cmd-stats-031 | cmd=STATS
+[INPUT] LOGOUT(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user1-032 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user2-012 | cmd=DATA_MODIFY | saved for user: user2
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user3-013 | cmd=DATA_MODIFY | ignored, user not logged in: user3
+[INPUT] LOGOUT(user1)
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user2-014 | cmd=LOGOUT | user logged out: user2
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user1-033 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user2-015 | cmd=LOGOUT | user not logged in: user2
+[INPUT] LOGOUT(user3)
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user2-016 | cmd=DATA_MODIFY | ignored, user not logged in: user2
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user3-034 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user3-017 | cmd=LOGIN | user logged in: user3
+[INPUT] LOGOUT(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user99-035 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user3-018 | cmd=DATA_MODIFY | saved for user: user3
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user4-019 | cmd=LOGIN | user logged in: user4
+[INPUT] EXIT()
+[console-app][21:24:20] > ACCEPTED  | id=cmd-exit-036 | cmd=EXIT
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user4-020 | cmd=DATA_MODIFY | saved for user: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user4-021 | cmd=DATA_MODIFY | saved for user: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user4-022 | cmd=LOGOUT | user logged out: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user4-023 | cmd=DATA_MODIFY | ignored, user not logged in: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user5-024 | cmd=LOGIN | user logged in: user5
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user5-025 | cmd=LOGOUT | user logged out: user5
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user5-026 | cmd=DATA_MODIFY | ignored, user not logged in: user5
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user99-027 | cmd=LOGIN | user logged in: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user99-028 | cmd=DATA_MODIFY | saved for user: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user99-029 | cmd=DATA_MODIFY | saved for user: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user99-030 | cmd=DATA_MODIFY | saved for user: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-stats-031 | cmd=STATS | statistics printed
+[console-app][21:24:20] > Logged in users: 3
+[console-app][21:24:20] > Data modifications per user: {user1=2, user99=3, user2=1, user3=1, user4=2}
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user1-032 | cmd=LOGOUT | user logged out: user1
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user1-033 | cmd=LOGOUT | user not logged in: user1
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user3-034 | cmd=LOGOUT | user logged out: user3
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user99-035 | cmd=LOGOUT | user logged out: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-exit-036 | cmd=EXIT | shutdown requested
 
-Accepted commandId=cmd-data-modify-user1-002
-Completed commandId=cmd-data-modify-user1-002 DATA_MODIFY saved for user: user1
+Process finished with exit code 0
 
-Accepted commandId=cmd-stats-003
-Completed commandId=cmd-stats-003 STATS
-Logged in users: 1
-Data modifications per user: {user1=1}
 ```
 
 ---
