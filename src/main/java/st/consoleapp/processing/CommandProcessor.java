@@ -1,13 +1,26 @@
 package st.consoleapp.processing;
 
 import st.consoleapp.command.Command;
+import st.consoleapp.output.CommandMessages;
 import st.consoleapp.output.OutputWriter;
 import st.consoleapp.persistence.ModificationRepository;
 import st.consoleapp.state.UserSessionState;
 
+import static st.consoleapp.output.CommandMessages.COMMAND_IGNORED;
+import static st.consoleapp.output.CommandMessages.ERROR_PREFIX;
+import static st.consoleapp.output.CommandMessages.MODIFICATION_IGNORED;
+import static st.consoleapp.output.CommandMessages.MODIFICATION_SAVED;
+import static st.consoleapp.output.CommandMessages.SHUTDOWN_REQUESTED;
+import static st.consoleapp.output.CommandMessages.STATS_LOGGED_USERS;
+import static st.consoleapp.output.CommandMessages.STATS_MODIFICATIONS;
+import static st.consoleapp.output.CommandMessages.STATS_PRINTED;
+import static st.consoleapp.output.CommandMessages.USER_ALREADY_LOGGED_IN;
+import static st.consoleapp.output.CommandMessages.USER_LOGGED_IN;
+import static st.consoleapp.output.CommandMessages.USER_LOGGED_OUT;
+import static st.consoleapp.output.CommandMessages.USER_NOT_LOGGED_IN;
+
 /**
- * Processes command events and executes corresponding business logic.
- * Acts as a consumer in the producer-consumer event-driven architecture.
+ * Processes command events and applies business logic.
  */
 public class CommandProcessor {
 
@@ -15,22 +28,14 @@ public class CommandProcessor {
     private final ModificationRepository repository;
     private final OutputWriter output;
 
-    /**
-     * Initializes processor with session state, repository and output.
-     */
-    public CommandProcessor(
-            UserSessionState sessionState,
-            ModificationRepository repository,
-            OutputWriter output
-    ) {
+    public CommandProcessor(UserSessionState sessionState,
+                            ModificationRepository repository,
+                            OutputWriter output) {
         this.sessionState = sessionState;
         this.repository = repository;
         this.output = output;
     }
 
-    /**
-     * Processes a single command event.
-     */
     public void process(Command command) {
         try {
             switch (command.type()) {
@@ -38,59 +43,47 @@ public class CommandProcessor {
                 case LOGOUT -> processLogout(command);
                 case DATA_MODIFY -> processDataModify(command);
                 case STATS -> processStats(command);
-                case EXIT -> output.write("Completed commandId=" + command.commandId() + " EXIT");
-                case INVALID -> output.write("Invalid command ignored: " + command.rawInput());
+                case EXIT -> completed(command, SHUTDOWN_REQUESTED);
+                case INVALID -> completed(command, COMMAND_IGNORED + ": " + command.rawInput());
+                default -> throw new IllegalStateException("Unsupported command type: " + command.type());
             }
         } catch (Exception e) {
-            output.write("Failed commandId=" + command.commandId() + " " + command.rawInput());
+            completed(command, ERROR_PREFIX + ": " + e.getMessage());
         }
     }
 
-    /**
-     * Handles LOGIN command.
-     */
     private void processLogin(Command command) {
         boolean success = sessionState.login(command.userId());
-
-        if (success) {
-            output.write("Completed commandId=" + command.commandId() + " LOGIN: user logged in: " + command.userId());
-        } else {
-            output.write("Completed commandId=" + command.commandId() + " LOGIN: user already logged in: " + command.userId());
-        }
+        completedForUser(command, success ? USER_LOGGED_IN : USER_ALREADY_LOGGED_IN);
     }
 
-    /**
-     * Handles LOGOUT command.
-     */
     private void processLogout(Command command) {
         boolean success = sessionState.logout(command.userId());
-
-        if (success) {
-            output.write("Completed commandId=" + command.commandId() + " LOGOUT: user logged out: " + command.userId());
-        } else {
-            output.write("Completed commandId=" + command.commandId() + " LOGOUT: user is not logged in: " + command.userId());
-        }
+        completedForUser(command, success ? USER_LOGGED_OUT : USER_NOT_LOGGED_IN);
     }
 
-    /**
-     * Handles DATA_MODIFY command.
-     */
     private void processDataModify(Command command) {
         if (!sessionState.isLoggedIn(command.userId())) {
-            output.write("Completed commandId=" + command.commandId() + " DATA_MODIFY: ignored, user not logged in: " + command.userId());
+            completedForUser(command, MODIFICATION_IGNORED);
             return;
         }
 
         repository.saveModification(command.commandId(), command.userId());
-        output.write("Completed commandId=" + command.commandId() + " DATA_MODIFY: saved for user: " + command.userId());
+        completedForUser(command, MODIFICATION_SAVED);
     }
 
-    /**
-     * Handles STATS command.
-     */
     private void processStats(Command command) {
-        output.write("Completed commandId=" + command.commandId() + " STATS");
-        output.write("Logged in users: " + sessionState.getLoggedInUserCount());
-        output.write("Data modifications per user: " + repository.countModificationsPerUser());
+        completed(command, STATS_PRINTED);
+
+        output.write(STATS_LOGGED_USERS + sessionState.getLoggedInUserCount());
+        output.write(STATS_MODIFICATIONS + repository.countModificationsPerUser());
+    }
+
+    private void completedForUser(Command command, String message) {
+        completed(command, CommandMessages.forUser(message, command.userId()));
+    }
+
+    private void completed(Command command, String message) {
+        output.write(CommandMessages.completed(command, message));
     }
 }

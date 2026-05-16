@@ -6,8 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class JdbcModificationRepositoryTest {
 
@@ -15,18 +14,16 @@ class JdbcModificationRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        repository = new JdbcModificationRepository(
-                "jdbc:h2:mem:test-" + System.nanoTime() + ";DB_CLOSE_DELAY=-1"
-        );
+        repository = new JdbcModificationRepository("jdbc:h2:mem:test-" + System.nanoTime());
     }
 
     @AfterEach
-    void tearDown() throws Exception {
+    void tearDown() {
         repository.close();
     }
 
     @Test
-    void shouldSaveModification() {
+    void shouldSaveSingleModification() {
         repository.saveModification("cmd-data-modify-user1-001", "user1");
 
         Map<String, Integer> stats = repository.countModificationsPerUser();
@@ -35,19 +32,29 @@ class JdbcModificationRepositoryTest {
     }
 
     @Test
-    void shouldAggregateMultipleModificationsPerUser() {
+    void shouldSaveMultipleModificationsForDifferentUsers() {
         repository.saveModification("cmd-data-modify-user1-001", "user1");
-        repository.saveModification("cmd-data-modify-user1-002", "user1");
-        repository.saveModification("cmd-data-modify-user2-003", "user2");
+        repository.saveModification("cmd-data-modify-user2-001", "user2");
 
         Map<String, Integer> stats = repository.countModificationsPerUser();
 
-        assertEquals(2, stats.get("user1"));
+        assertEquals(1, stats.get("user1"));
         assertEquals(1, stats.get("user2"));
     }
 
     @Test
-    void shouldReturnEmptyWhenNoData() {
+    void shouldStoreMultipleEntriesForSameUser() {
+        repository.saveModification("cmd-data-modify-user1-001", "user1");
+        repository.saveModification("cmd-data-modify-user1-002", "user1");
+        repository.saveModification("cmd-data-modify-user1-003", "user1");
+
+        Map<String, Integer> stats = repository.countModificationsPerUser();
+
+        assertEquals(3, stats.get("user1"));
+    }
+
+    @Test
+    void shouldReturnEmptyStatsWhenNoData() {
         Map<String, Integer> stats = repository.countModificationsPerUser();
 
         assertTrue(stats.isEmpty());

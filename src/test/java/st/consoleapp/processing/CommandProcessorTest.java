@@ -12,10 +12,9 @@ import st.consoleapp.state.UserSessionState;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CommandProcessorTest {
 
@@ -25,7 +24,6 @@ class CommandProcessorTest {
     private CommandProcessor processor;
 
     @BeforeEach
-
     void setUp() {
         sessionState = new UserSessionState();
         repository = new JdbcModificationRepository("jdbc:h2:mem:test-" + System.nanoTime());
@@ -36,43 +34,92 @@ class CommandProcessorTest {
     @Test
     void shouldProcessLoginCommand() {
         Command command = command("cmd-login-user1-001", CommandType.LOGIN, "user1", "LOGIN(user1)");
+
         processor.process(command);
+
         assertTrue(sessionState.isLoggedIn("user1"));
+
+        assertCompleted(command, "user logged in: user1");
     }
 
     @Test
     void shouldProcessLogoutCommand() {
         sessionState.login("user1");
+
         Command command = command("cmd-logout-user1-001", CommandType.LOGOUT, "user1", "LOGOUT(user1)");
+
         processor.process(command);
+
         assertFalse(sessionState.isLoggedIn("user1"));
+
+        assertCompleted(command, "user logged out: user1");
     }
 
     @Test
     void shouldProcessDataModifyCommandForLoggedInUser() {
         sessionState.login("user1");
+
         Command command = command("cmd-data-modify-user1-001", CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
+
         processor.process(command);
-        assertEquals(1, repository.countModificationsPerUser().get("user1"));
+
+        Map<String, Integer> stats = repository.countModificationsPerUser();
+
+        assertEquals(1, stats.get("user1"));
+
+        assertCompleted(command, "saved for user: user1");
     }
 
     @Test
     void shouldIgnoreDataModifyCommandForNotLoggedInUser() {
         Command command = command("cmd-data-modify-user1-001", CommandType.DATA_MODIFY, "user1", "DATA_MODIFY(user1)");
+
         processor.process(command);
+
         assertTrue(repository.countModificationsPerUser().isEmpty());
+
+        assertCompleted(command, "ignored, user not logged in: user1");
     }
 
     @Test
     void shouldProcessStatsCommand() {
         sessionState.login("user1");
         sessionState.login("user2");
+
         repository.saveModification("cmd-data-modify-user1-001", "user1");
         repository.saveModification("cmd-data-modify-user1-002", "user1");
+
         Command command = command("cmd-stats-001", CommandType.STATS, null, "STATS()");
+
         processor.process(command);
-        assertTrue(output.messages.stream().anyMatch(m -> m.contains("Logged in users: 2")));
-        assertTrue(output.messages.stream().anyMatch(m -> m.contains("user1=2")));
+
+        assertCompleted(command, "statistics printed");
+
+        assertTrue(output.messages.stream()
+                .anyMatch(m -> m.contains("Logged in users: 2")));
+
+        assertTrue(output.messages.stream()
+                .anyMatch(m -> m.contains("user1=2")));
+    }
+
+    @Test
+    void shouldHandleInvalidCommand() {
+        Command command = command("cmd-invalid-001", CommandType.INVALID, null, "HELLO()");
+
+        processor.process(command);
+
+        assertCompleted(command, "command ignored");
+    }
+
+    // --- Helpers ---
+
+    private void assertCompleted(Command command, String text) {
+        assertTrue(output.messages.stream().anyMatch(m ->
+                m.contains("COMPLETED")
+                        && m.contains("id=" + command.commandId())
+                        && m.contains("cmd=" + command.type())
+                        && m.contains(text)
+        ), "Missing completed message for " + command.commandId());
     }
 
     private Command command(String commandId, CommandType type, String userId, String rawInput) {
