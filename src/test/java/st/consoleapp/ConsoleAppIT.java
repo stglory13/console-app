@@ -3,6 +3,7 @@ package st.consoleapp;
 import org.junit.jupiter.api.Test;
 import st.consoleapp.command.CommandParser;
 import st.consoleapp.command.CommandType;
+import st.consoleapp.output.ConsoleOutputWriter;
 import st.consoleapp.output.OutputWriter;
 import st.consoleapp.persistence.JdbcModificationRepository;
 import st.consoleapp.persistence.ModificationRepository;
@@ -33,6 +34,11 @@ class ConsoleAppIT {
      * - ordered asynchronous processing
      * - STATS output verification
      * - graceful shutdown via EXIT
+     *
+     *  ConsoleAppIT goes over real pipeline producer/parser/queue/worker/processor/DB/output
+     *  to validate end-to-end behavior and interactions between components
+     *
+     *  Using TestOutputWriter instead of OutputWriter for verification of output in tests
      */
     @Test
     void shouldProcessFullApplicationFlow() throws Exception {
@@ -91,7 +97,7 @@ class ConsoleAppIT {
 
         CommandQueue queue = new CommandQueue();
         UserSessionState sessionState = new UserSessionState();
-        TestOutputWriter output = new TestOutputWriter();
+        TestOutputWriter output = new TestOutputWriter(); // instead of OutputWriter for verification of output in tests
 
         try (ModificationRepository repository =
                      new JdbcModificationRepository("jdbc:h2:mem:console-app-it-" + System.nanoTime())) {
@@ -102,8 +108,7 @@ class ConsoleAppIT {
 
             workerThread.start();
 
-            ConsoleCommandProducer producer =
-                    new ConsoleCommandProducer(new CommandParser(), queue, output);
+            ConsoleCommandProducer producer = new ConsoleCommandProducer(new CommandParser(), queue, output, true);
 
             producer.start();
 
@@ -296,12 +301,17 @@ class ConsoleAppIT {
     private record ExpectedCommand(String commandId, CommandType type) {
     }
 
+    /**
+     * Wrapper for OutputWriter that also prints to console for visibility during test runs
+     */
     private static class TestOutputWriter implements OutputWriter {
+        private final OutputWriter consoleOutput = new ConsoleOutputWriter();
         private final List<String> messages = new ArrayList<>();
 
         @Override
         public synchronized void write(String message) {
             messages.add(message);
+            consoleOutput.write(message);
         }
     }
 }

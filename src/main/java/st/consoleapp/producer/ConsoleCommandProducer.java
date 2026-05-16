@@ -23,15 +23,16 @@ public class ConsoleCommandProducer {
     private final CommandQueue queue;
     private final OutputWriter output;
     private final AtomicLong sequence = new AtomicLong(1);
+    private final boolean echoInput;
 
-    public ConsoleCommandProducer(
-            CommandParser parser,
-            CommandQueue queue,
-            OutputWriter output
-    ) {
+    public ConsoleCommandProducer(CommandParser parser,
+                                  CommandQueue queue,
+                                  OutputWriter output,
+                                  boolean echoInput) {
         this.parser = parser;
         this.queue = queue;
         this.output = output;
+        this.echoInput = echoInput;
     }
 
     /**
@@ -53,10 +54,14 @@ public class ConsoleCommandProducer {
                         Instant.now()
                 );
 
+                if (echoInput) {
+                    // only for testing purposes - allows us to see the raw input before processing
+                    System.out.println("[INPUT] " + line);
+                }
                 output.write(CommandMessages.accepted(command)); //synchronous response
                 queue.submit(command); //asynchronous processing
 
-                if (command.type().name().equals("EXIT")) {
+                if (command.type() == CommandType.EXIT) {
                     break;
                 }
             }
