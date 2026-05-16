@@ -5,6 +5,7 @@ import st.consoleapp.command.CommandParser;
 import st.consoleapp.command.CommandType;
 import st.consoleapp.command.ParsedCommand;
 import st.consoleapp.config.AppConfig;
+import st.consoleapp.output.CommandMessages;
 import st.consoleapp.output.OutputWriter;
 import st.consoleapp.queue.CommandQueue;
 
@@ -52,9 +53,8 @@ public class ConsoleCommandProducer {
                         Instant.now()
                 );
 
-                output.write("Accepted commandId=" + command.commandId());
-
-                queue.submit(command);
+                output.write(CommandMessages.accepted(command)); //synchronous response
+                queue.submit(command); //asynchronous processing
 
                 if (command.type().name().equals("EXIT")) {
                     break;
