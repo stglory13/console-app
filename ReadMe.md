@@ -164,16 +164,119 @@ This ensures graceful termination of the application.
 ## Example output
 
 ```
-Accepted commandId=cmd-login-user1-001
-Completed commandId=cmd-login-user1-001 LOGIN: user logged in: user1
+[INPUT] LOGOUT(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user1-001 | cmd=LOGOUT
+[INPUT] LOGIN(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user1-002 | cmd=LOGIN
+[INPUT] LOGIN(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user2-003 | cmd=LOGIN
+[INPUT] LOGIN(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user1-004 | cmd=LOGIN
+[INPUT] LOGIN()
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-005 | cmd=INVALID
+[INPUT] LOGIN
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-006 | cmd=INVALID
+[INPUT] DATA_MODIFY()
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-007 | cmd=INVALID
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user1-001 | cmd=LOGOUT | user not logged in: user1
+[INPUT] HELLO(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-008 | cmd=INVALID
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user1-002 | cmd=LOGIN | user logged in: user1
+[INPUT] INVALID_COMMAND()
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user2-003 | cmd=LOGIN | user logged in: user2
+[console-app][21:24:20] > ACCEPTED  | id=cmd-invalid-009 | cmd=INVALID
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user1-004 | cmd=LOGIN | user already logged in: user1
+[INPUT] DATA_MODIFY(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user1-010 | cmd=DATA_MODIFY
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-005 | cmd=INVALID | command ignored: LOGIN()
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-006 | cmd=INVALID | command ignored: LOGIN
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-007 | cmd=INVALID | command ignored: DATA_MODIFY()
+[INPUT] DATA_MODIFY(user1)
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-008 | cmd=INVALID | command ignored: HELLO(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user1-011 | cmd=DATA_MODIFY
+[console-app][21:24:20] > COMPLETED | id=cmd-invalid-009 | cmd=INVALID | command ignored: INVALID_COMMAND()
+[INPUT] DATA_MODIFY(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user2-012 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user3)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user3-013 | cmd=DATA_MODIFY
+[INPUT] LOGOUT(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user2-014 | cmd=LOGOUT
+[INPUT] LOGOUT(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user2-015 | cmd=LOGOUT
+[INPUT] DATA_MODIFY(user2)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user2-016 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user3)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user3-017 | cmd=LOGIN
+[INPUT] DATA_MODIFY(user3)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user3-018 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user4-019 | cmd=LOGIN
+[INPUT] DATA_MODIFY(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user4-020 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user4-021 | cmd=DATA_MODIFY
+[INPUT] LOGOUT(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user4-022 | cmd=LOGOUT
+[INPUT] DATA_MODIFY(user4)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user4-023 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user5)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user5-024 | cmd=LOGIN
+[INPUT] LOGOUT(user5)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user5-025 | cmd=LOGOUT
+[INPUT] DATA_MODIFY(user5)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user5-026 | cmd=DATA_MODIFY
+[INPUT] LOGIN(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-login-user99-027 | cmd=LOGIN
+[INPUT] DATA_MODIFY(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user99-028 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user99-029 | cmd=DATA_MODIFY
+[INPUT] DATA_MODIFY(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-data-modify-user99-030 | cmd=DATA_MODIFY
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user1-010 | cmd=DATA_MODIFY | saved for user: user1
+[INPUT] STATS()
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user1-011 | cmd=DATA_MODIFY | saved for user: user1
+[console-app][21:24:20] > ACCEPTED  | id=cmd-stats-031 | cmd=STATS
+[INPUT] LOGOUT(user1)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user1-032 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user2-012 | cmd=DATA_MODIFY | saved for user: user2
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user3-013 | cmd=DATA_MODIFY | ignored, user not logged in: user3
+[INPUT] LOGOUT(user1)
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user2-014 | cmd=LOGOUT | user logged out: user2
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user1-033 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user2-015 | cmd=LOGOUT | user not logged in: user2
+[INPUT] LOGOUT(user3)
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user2-016 | cmd=DATA_MODIFY | ignored, user not logged in: user2
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user3-034 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user3-017 | cmd=LOGIN | user logged in: user3
+[INPUT] LOGOUT(user99)
+[console-app][21:24:20] > ACCEPTED  | id=cmd-logout-user99-035 | cmd=LOGOUT
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user3-018 | cmd=DATA_MODIFY | saved for user: user3
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user4-019 | cmd=LOGIN | user logged in: user4
+[INPUT] EXIT()
+[console-app][21:24:20] > ACCEPTED  | id=cmd-exit-036 | cmd=EXIT
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user4-020 | cmd=DATA_MODIFY | saved for user: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user4-021 | cmd=DATA_MODIFY | saved for user: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user4-022 | cmd=LOGOUT | user logged out: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user4-023 | cmd=DATA_MODIFY | ignored, user not logged in: user4
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user5-024 | cmd=LOGIN | user logged in: user5
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user5-025 | cmd=LOGOUT | user logged out: user5
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user5-026 | cmd=DATA_MODIFY | ignored, user not logged in: user5
+[console-app][21:24:20] > COMPLETED | id=cmd-login-user99-027 | cmd=LOGIN | user logged in: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user99-028 | cmd=DATA_MODIFY | saved for user: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user99-029 | cmd=DATA_MODIFY | saved for user: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-data-modify-user99-030 | cmd=DATA_MODIFY | saved for user: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-stats-031 | cmd=STATS | statistics printed
+[console-app][21:24:20] > Logged in users: 3
+[console-app][21:24:20] > Data modifications per user: {user1=2, user99=3, user2=1, user3=1, user4=2}
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user1-032 | cmd=LOGOUT | user logged out: user1
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user1-033 | cmd=LOGOUT | user not logged in: user1
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user3-034 | cmd=LOGOUT | user logged out: user3
+[console-app][21:24:20] > COMPLETED | id=cmd-logout-user99-035 | cmd=LOGOUT | user logged out: user99
+[console-app][21:24:20] > COMPLETED | id=cmd-exit-036 | cmd=EXIT | shutdown requested
 
-Accepted commandId=cmd-data-modify-user1-002
-Completed commandId=cmd-data-modify-user1-002 DATA_MODIFY saved for user: user1
+Process finished with exit code 0
 
-Accepted commandId=cmd-stats-003
-Completed commandId=cmd-stats-003 STATS
-Logged in users: 1
-Data modifications per user: {user1=1}
 ```
 
 ---
