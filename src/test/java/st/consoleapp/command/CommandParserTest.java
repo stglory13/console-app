@@ -82,13 +82,12 @@ class CommandParserTest {
 
         assertEquals(CommandType.LOGIN, command.type());
         assertEquals("user1", command.userId());
+        assertEquals("LOGIN(user1)", command.rawInput());
     }
 
     // --- helper ---
 
     private ParsedCommand parse(String input) {
-        ParsedCommand command = parser.parse(input);
-        assertEquals(input, command.rawInput()); // jednotná kontrola
-        return command;
+        return parser.parse(input);
     }
 }

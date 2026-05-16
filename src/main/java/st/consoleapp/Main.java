@@ -31,7 +31,7 @@ public class Main {
             workerThread.start();
 
             CommandParser parser = new CommandParser();
-            ConsoleCommandProducer producer = new ConsoleCommandProducer(parser, queue, output);
+            ConsoleCommandProducer producer = new ConsoleCommandProducer(parser, queue, output, false);
 
             producer.start();
             workerThread.join();
